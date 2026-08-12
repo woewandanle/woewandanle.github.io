@@ -147,7 +147,7 @@ body{background:var(--bg);color:var(--paper);font-family:var(--sans);font-size:1
   <div class="wrap">
     <div id="seal">人文<br>社科</div>
     <h1>人文社科<br><em>學生模擬器</em></h1>
-    <p class="sub">理論直覺・實證努力・政治・信心・行政・口才。<br>六種能力，決定你在學術生態鏈的位置。</p>
+    <p class="sub">理論直覺・實證努力・政治・信心・行政・口才。<br>六種能力，決定你在學術食物鏈的位置。</p>
     <p class="ver">▎本版本：16 歲 → 22 歲（大學畢業）</p>
     <div class="field"><label>姓名</label><input id="in-name" maxlength="10" placeholder="例如：陳彥廷"></div>
     <div class="field"><label>起始年份（十六歲那年）</label>
@@ -257,8 +257,8 @@ function newState(name,org,year){
     stage:'HS',log:[],
     litEntries:0,litWins:0,stress:0,dep:null,mania:null,mhList:[],
     thesis:null,dualMajor:null,dest:null,
-    grade:0,lost:0,skipNext:false,lostYear:false,crisis:0,hsGov:false,
-    rel:null,relLog:[],loveGuaranteed:false,exes:0};
+    grade:0,lost:0,skipNext:false,lostYear:false,crisis:0,hsGov:false,weakPhd:false,
+    rel:null,relLog:[],loveGuaranteed:false,exes:0,loveFails:0};
 }
 function abCost(k){ const cur=S.ab[k],pk=S.pot[k];
   let c=cur>=70?4:cur>=55?3:cur>=40?2:1; if(cur>=pk)c*=3; return c; }
@@ -759,10 +759,10 @@ const REL={
 const AGEQ={
  young:{n:'年幼',d:['小你兩屆的那個人','剛升大一、比你小三歲的那個人','系上直屬學弟妹']},
  peer :{n:'同儕',d:['同班的那個人','隔壁系同屆的那個人','讀書會上坐你對面的那個人']},
- old  :{n:'年長',d:['大你三屆、已經在唸碩班的那個人','系上的兼任助理，大你五歲','在研討會上認識、已經出社會的那個人']},
+ old  :{n:'年長',d:['高你三屆、已經在唸碩班的那個人','系上的兼任助理，大你五歲','在研討會上認識、已經出社會的那個人']},
 };
 const FEELQ={
- like   :{n:'感興趣',d:'你確實被吸引——也許是因為對方好看，也許是因為對方講話的方式讓你想一直聽下去。'},
+ like   :{n:'感興趣',d:'你確實被吸引——不是因為對方好看，是因為對方講話的方式讓你想一直聽下去。'},
  neutral:{n:'不討厭',d:'你對這個人沒有特別的感覺。不討厭，也不心動，只是剛好在同一個空間裡很久了。'},
  hate   :{n:'討厭',d:'你其實有點討厭這個人。討厭到你會在洗澡的時候反覆想起對方說過的話。'},
 };
@@ -773,7 +773,7 @@ function meetPerson(){
   return {age,feel,theyMove,desc:pick(AGEQ[age].d)}; }
 function loveRate(p,mode){
   const base=S.ab.sp*0.5+S.ab.cf*0.3+S.ab.po*0.2;
-  /* 對方已經主動了，答應幾乎不會失敗，風險在後面 */
+  /* 對方已經主動了，答應幾乎不會失敗——真正的風險在後面 */
   if(mode==='passive')return Math.round(clamp(90+(base-30)/6,90,99));
   let v=(base-28)*1.8+32;
   if(S.org==='cap'||S.org==='art')v+=15;
@@ -825,6 +825,7 @@ function encounter(){
   choose('這一年，有一個人',opts); }
 function tryLove(p,mode,rate){
   if(chance(rate)){ settleRomance(p,mode,false); return; }
+  S.loveFails++;
   const d=bump('cf',-3);
   card('bad','沒有成功',pick([
     '對方說「我們這樣就很好」。你點頭說對啊，然後回去把對話紀錄從上到下讀了一遍。',
@@ -865,14 +866,14 @@ function settleRomance(p,mode,boost){
     S.relLog.push(`相愛相殺（${tag}）`);
     card('gold','相愛相殺',
       '你們可以為了一個概念吵到凌晨三點，然後和好，然後再吵。<br>'+
-      '對方是會直接說「我恨你這個噁心的垃圾」的人，也是唯一真的接住你內心最脆弱一塊的人。<br>'+
+      '對方是唯一一個會直接說「你這段在鬼扯」的人，也是唯一一個真的讀完你寫的每一個字的人。<br>'+
       '<span style="color:var(--dim)">你在這段關係裡變得更聰明，也變得更不確定自己值不值得被喜歡。</span>'+
       `<div class="statline">${bumps([['th',6],['sp',5],['cf',-4]])}｜${tag}</div>`);
     nextStep(); return; }
   S.rel={kind:'stable',age:p.age,feel:p.feel,years:0,tag};
   S.relLog.push(`穩定交往（${tag}）`);
   card('good','穩定交往',
-    pick(['你們的日常很無聊：一起吃飯、一起讀書、一起在深夜的便利商店挑i珍食。',
+    pick(['你們的日常很無聊：一起吃飯、一起讀書、一起在深夜的便利商店挑飯糰。',
           '對方會在你趕報告的時候安靜地坐在旁邊做自己的事。你後來才知道這件事有多稀有。'])+
     '<br><span style="color:var(--dim)">被穩定地喜歡著，會讓一個人變得比較敢講話。</span>'+
     `<div class="statline">${bumps([['cf',8],['sp',6]])}｜${tag}<br><span style="opacity:.65">往後每年仍有加成，但會逐年遞減至零；分手機率則逐年上升</span></div>`);
@@ -917,8 +918,8 @@ function relationshipTick(){
       card('info','燒完了',`最後一次吵架沒有結論，只是兩個人都累了。<br>你留下了那些被逼出來的想法，也留下了那個「我是不是很難相處」的問題。<div class="statline">${bumps([['th',3],['cf',-2]])}</div>`);
     }else{
       card('gold','還在燒',pick([
-        '對方把你罵成智障，然後你不得不承認每一條都對。',
-        '你們又為了一個觀點吵起來。凌晨四點，你發現自己在笑。'])+
+        '對方把你的草稿改到滿江紅，你氣了三天，然後承認每一條都對。',
+        '你們又為了一個引註吵起來。凌晨四點，你發現自己在笑。'])+
         `<div class="statline">${bumps([['th',5],['sp',3],['cf',-4]])}</div>`);
     }
     nextStep(); return; }
@@ -981,7 +982,7 @@ function badEnding(){
     ['出身',S.O.n],['學校',S.tier?TIERS[S.tier].n:'高中'],
     ['住院',S.crisis+' 次'],['精神科病史',S.mhList.join('、')||'無'],
     ['文學獎',`參賽 ${S.litEntries}・得獎 ${S.litWins}`],
-    ['感情紀錄',S.relLog.length?S.relLog.length+' 段':'無'],
+    ...loveRows(),
   ]); }
 
 /* ================= 結算與畢業去向 ================= */
@@ -994,7 +995,7 @@ function finale(){
     `${S.O.n}出身的 <b class="hl">${S.name}</b>，從 ${TIERS[S.tier].n} 畢業${S.lost?`（休學 ${S.lost} 年，延畢）`:''}。`+
     `<div style="margin-top:8px">${rows}</div>`+
     `<div class="statline" style="margin-top:8px">學者類型　<b class="hl">${scholarType()}</b>　綜合 <b class="hl">${ovr()}</b>　聲望 <b class="hl">${S.rep}</b><br>文學獎　參賽 ${S.litEntries} 次・得獎 ${S.litWins} 次${S.mhList.length?`<br>精神科病史　${S.mhList.join('、')}${S.crisis?`｜住院 ${S.crisis} 次`:''}`:''}`+
-    `${S.relLog.length?`<br>感情紀錄　${S.relLog.join('、')}${S.rel?`（${REL[S.rel.kind].n}中）`:''}`:'<br>感情紀錄　無'}</div>`+
+    `${S.relLog.length?`<br>感情紀錄　${S.relLog.join('、')}${S.rel?`（${REL[S.rel.kind].n}中）`:''}`:'<br>感情紀錄　無'}${S.loveFails?`｜告白失敗 ${S.loveFails} 次`:''}</div>`+
     `<div style="margin-top:8px;font-size:12px;color:var(--dim);letter-spacing:.15em">已取得屬性</div><div>${tl}</div>`);
   gradChoice(); }
 
@@ -1008,7 +1009,7 @@ function gradChoice(){
   choose('畢業去向',[
     {t:'推甄碩士班',main:true,s:`錄取率 <b>${m.p}%</b>（理論 30%／實證 30%／政治 20%／行政 10%＋聲望＋論文 ${S.thesis==='great'?'+8':S.thesis==='ok'?'+3':S.thesis==='none'?'−8':'0'}）｜落榜則進入職場`,
      f:()=>{ if(chance(m.p)){
-        card('gold','推甄上了',`備審資料十頁，面試十五分鐘。放榜那天你反覆重新整理了四十次頁面。<br>你還不知道，真正的篩選現在才開始。`);
+        card('gold','推甄上了',`備審資料七十頁，面試十五分鐘。放榜那天你反覆重新整理了四十次頁面。<br>你還不知道，真正的篩選現在才開始。`);
         masterProgram(); }
       else{ card('bad','落榜',`正取六名、備取三名，沒有你。有人跟你說「再考一年就好」，但你算了一下家裡還能撐多久。<div class="statline">${bumps([['cf',-6]])}</div>`);
         career('碩士落榜'); } }},
@@ -1029,7 +1030,7 @@ function stockGod(){
   if(!(S.ab.th>=thMin&&S.ab.ad<=adMax&&S.ab.em<=emMax))return false;
   return chance(bip?85:50); }
 /* ================= 碩士班 ================= */
-function msThesisScore(){ return S.ab.th*0.30+S.ab.em*0.35+S.ab.ad*0.20+S.ab.cf*0.15; }
+function msThesisScore(){ return S.ab.th*0.35+S.ab.em*0.35+S.ab.ad*0.10+S.ab.cf*0.15+S.ab.po*0.05; }
 function msDropRisk(){
   return Math.round(clamp(14+(30-S.ab.cf)*1.4+(S.dep?22:0)+(S.traits.adhd?8:0)+S.stress*3-(S.ab.ad-30)*0.6,4,72)); }
 function masterProgram(){
@@ -1038,7 +1039,7 @@ function masterProgram(){
     `修業兩年，寫論文三年。你開始知道那些掛在研究室門口的名字是怎麼來的。<br>`+
     `<span style="color:var(--dim)">碩士班不篩選聰明，它篩選的是「能不能把一件沒有人在乎的事做完」。</span>`+
     `<div class="statline">退學風險 <b class="dn">${drop}%</b>　（信心・行政・精神狀態・壓力）<br>`+
-    `論文分數 <b class="hl">${sc.toFixed(1)}</b>　理論 30%・實證 35%・行政 20%・信心 15%<br>`+
+    `論文分數 <b class="hl">${sc.toFixed(1)}</b>　理論 35%・實證 35%・信心 15%・行政 10%・政治 5%<br>`+
     `<span style="opacity:.7">58 以上為優秀論文，否則平庸</span></div>`);
   choose('',[{t:'▸ 三年後',main:true,f:()=>{
     if(chance(drop))msDropout();
@@ -1047,9 +1048,9 @@ function masterProgram(){
 function msDropout(){
   const a=bump('ad',4), c=bump('cf',-16);
   card('bad','碩士退學',
-    `第三年你已經很久沒有進研究室了。指導教授最後一次寄信給你，你連開都不敢打開。<br>`+
-    `辦退學的手續比想像中簡單，幾封電郵就搞定了。<br>`+
-    `<span style="color:var(--dim)">你把那些讀書的筆記整箱丟掉的時候，才真的哭出來。</span>`+
+    `第三年你已經很久沒有進研究室了。指導教授最後一次寄信給你，你連開都沒有開。<br>`+
+    `辦退學的手續比想像中簡單，蓋七個章，四十分鐘。<br>`+
+    `<span style="color:var(--dim)">你把那些讀書會的筆記整箱丟掉的時候，才真的哭出來。</span>`+
     `<div class="statline">行政 <b class="up">+${a}</b>（你至少學會了怎麼跑流程）　信心 <b class="dn">${c}</b></div>`);
   choose('',[{t:'▸ 進入職場',main:true,f:()=>career('碩士退學')}]); }
 function msMediocre(){
@@ -1057,7 +1058,17 @@ function msMediocre(){
     `你交出去了。口試委員問的問題都很客氣，客氣到你知道他們沒有很認真讀。<br>`+
     `<span style="color:var(--dim)">你曾經幻想能夠創造些什麼屬於你的東西，但現在的你只求順利畢業。</span>`+
     `<div class="statline">${bumps([['em',6],['ad',6]])}</div>`);
-  choose('',[{t:'▸ 進入職場',main:true,f:()=>career('碩士畢業')}]); }
+  choose('接下來呢',[
+    {t:'進入職場',main:true,s:'依 理論直覺・信心・政治・行政 判定',f:()=>career('碩士畢業')},
+    {t:'硬考本土博士',warn:true,
+     s:'政治 +7　行政 +5　實證 +3｜碩論平庸：教職競爭力 −10｜可能唸完仍然沒有專任',
+     f:()=>{ S.weakPhd=true;
+       card('info','還是唸下去了',
+         `沒有人特別鼓勵你唸，但也沒有人阻止你。你考上了，因為那年報名的人只比錄取名額多兩個。<br>`+
+         `<span style="color:var(--dim)">「先唸再說，反正外面也不好找。」這句話你會在往後十年裡聽很多人說，包括你自己。</span>`+
+         `<div class="statline">${bumps([['po',7],['ad',5],['em',3]])}</div>`);
+       academicCareer('local'); }},
+  ]); }
 function msGreat(){
   card('gold','優秀論文',
     `口試那天有兩個委員為了你的第三章的立論吵了起來，而你發現自己有能力回答他們兩個人。<br>`+
@@ -1091,21 +1102,25 @@ function academicCareer(kind){
   S.year=degreeYear+YEARS; S.age+=dy+YEARS;
   /* --- 教職 --- */
   const tierBonus={emp:6,top:3,nat:1,priv:0,intl:5}[S.tier]||0;
+  /* 就業市場：那年有沒有缺、缺在不在你的領域，這件事不是你能控制的 */
+  const luck=ri(-9,9);
   const post=a.th*0.30+a.po*0.25+a.em*0.20+a.ad*0.10+Math.min(S.rep,100)*0.10
-    +(kind==='overseas'?8:0)+tierBonus;
+    +(kind==='overseas'?8:0)+tierBonus-(S.weakPhd?14:0)+luck;
   const POSTS=[[78,'帝大霸權 教職'],[66,'頂大系統 教職'],[54,'國立大學 教職'],[42,'私校聯盟 教職'],[-99,'沒有專任教職']];
   const job=POSTS.find(x=>post>=x[0])[1];
   const tenured=job!=='沒有專任教職';
   /* --- 科技部計畫：30 次申請 --- */
   const gp=clamp((a.em*0.35+a.po*0.30+a.ad*0.25+a.th*0.10-24)*1.7,6,86)*(tenured?1:0.45);
   let grants=0; for(let i=0;i<YEARS;i++)if(chance(gp))grants++;
+  /* 計畫是研究的燃料：決定產出係數，也小幅提升品質 */
+  const fund=grants/YEARS, mult=0.58+0.72*fund;
   /* --- 產出總量 --- */
-  const nPapers=Math.max(2,Math.round((4+a.em*0.22+a.po*0.08+a.ad*0.04)*(tenured?1:0.5)));
-  const nBooks =Math.max(0,Math.round((0.6+a.th*0.032+a.em*0.018)*(tenured?1:0.5)));
+  const nPapers=Math.max(1,Math.round((4+a.em*0.22+a.po*0.08+a.ad*0.04)*mult*(tenured?1:0.5)));
+  const nBooks =Math.max(0,Math.round((0.6+a.th*0.032+a.em*0.018)*mult*(tenured?1:0.5)));
   /* --- 分級規則 --- */
   const landmarkOK = a.th>=80&&a.po<=60;
   const influOK    = (a.th>=70&&a.em>=60)||a.po>=70;
-  const pInflu = influOK?clamp((a.th+a.em+a.po*0.5)/4-18,10,48):0;
+  const pInflu = influOK?clamp((a.th+a.em+a.po*0.5)/4-18+fund*7,10,52):0;
   const pIgnor = a.po<60?clamp((60-a.po)*0.75,5,38):0;
   let landmarkLeft=0;
   if(landmarkOK)for(let i=0;i<3;i++)if(chance(50))landmarkLeft++;
@@ -1120,6 +1135,14 @@ function academicCareer(kind){
   const B=grade(nBooks,70), P=grade(nPapers,16);
   /* 劃時代名額沒用完的，補在專書上（經典多半是書） */
   while(landmarkLeft>0&&B.mid>0){ B.mid--; B.land++; landmarkLeft--; }
+  /* 聲望特例：名氣本身就會讓書被讀——最多兩部專書 */
+  let repSlots=0;
+  if(S.rep>=75&&chance(75))repSlots++;
+  if(S.rep>=110&&chance(60))repSlots++;
+  let repUp=0;
+  for(let i=0;i<repSlots;i++){
+    if(B.mid>0){ B.mid--; B.infl++; repUp++; }
+    else if(B.ign>0){ B.ign--; B.infl++; repUp++; } }
   /* --- 優良教師 --- */
   const tp=clamp((a.sp*0.6+a.cf*0.4-38)*1.6,2,48)*(tenured?1:0.6);
   let teach=0; for(let i=0;i<YEARS;i++)if(chance(tp))teach++;
@@ -1135,10 +1158,13 @@ function academicCareer(kind){
     `<span style="color:var(--dim)">${tenured?'你有一間自己的研究室，門口貼著你的名字和 office hour。':'你沒有拿到專任教職。三十年來你在四所學校之間跑鐘點，每學期重新簽一次約。'}</span>`+
     `<div class="statline" style="line-height:1.9">`+
     row('教職',job,tenured?'var(--brass)':'var(--bad)')+
+    row('　就業市場運氣',(luck>=0?'+':'')+luck,'var(--dim)')+
     row('科技部計畫',`${grants} / ${YEARS} 件`)+
+    row('　產出係數',`×${mult.toFixed(2)}`,'var(--dim)')+
     `<div style="margin-top:6px;color:var(--dim);font-size:11.5px;letter-spacing:.15em">學術專書 ${nBooks} 本</div>`+
     row('　劃時代經典',B.land+' 本',B.land?'var(--brass)':'var(--dim)')+
     row('　有影響力',B.infl+' 本')+
+    (repUp?row('　　其中靠聲望',repUp+' 本','var(--dim)'):'')+
     row('　平庸無奇',B.mid+' 本','var(--dim)')+
     row('　乏人問津',B.ign+' 本','var(--dim)')+
     `<div style="margin-top:6px;color:var(--dim);font-size:11.5px;letter-spacing:.15em">期刊論文 ${nPapers} 篇</div>`+
@@ -1151,13 +1177,13 @@ function academicCareer(kind){
     row('系主任',chair?chair+' 年':'沒有當過')+
     `</div>`);
   board(2);
-  academicCoda(kind,job,tenured,B,P,grants,teach,chair); }
+  academicCoda(kind,job,tenured,B,P,grants,teach,chair,mult,repUp,nBooks,nPapers,luck); }
 
-function academicCoda(kind,job,tenured,B,P,grants,teach,chair){
+function academicCoda(kind,job,tenured,B,P,grants,teach,chair,mult,repUp,nBooks,nPapers,luck){
   const land=B.land+P.land, infl=B.infl+P.infl, ign=B.ign+P.ign;
   let title,body;
   if(land>=3){ title='學派';
-    body='你的名字變成了一種形容詞。研究生在報告裡寫「某某式的觀點」，指的是你。<br>'+
+    body='你的名字變成了一種形容詞。研究生在報告裡寫「某某式的讀法」，指的是你。<br>'+
       '你活著看到自己的東西進了教科書——這件事發生的時候，你正在為了一份核銷單跟會計室吵架。'; }
   else if(land>=1){ title='那一本書';
     body='你寫過一本大家都會引用的書。之後的二十年，每一次自我介紹都會被提到它。<br>'+
@@ -1184,18 +1210,29 @@ function academicCoda(kind,job,tenured,B,P,grants,teach,chair){
     `${S.O.n}出身｜${TIERS[S.tier].n}畢業｜${kind==='overseas'?'海外':'本土'}博士｜${job}${S.mhList.length?`｜${S.mhList.join('、')}`:''}</div>`);
   endGame(land>=1?'gold':tenured?'good':'bad',title,
     [`${kind==='overseas'?'海外':'本土'}博士・三十年學術生涯`,job],[
-    ['§','三十年產出'],
-    ['教職',job],['科技部計畫',grants+' / 30 件'],
-    ['劃時代經典',(B.land+P.land)+' 部',(B.land+P.land)?'#d4a24c':'#948da6'],
-    ['有影響力',(B.infl+P.infl)+' 部'],
-    ['平庸無奇',(B.mid+P.mid)+' 部','#948da6'],
-    ['乏人問津',(B.ign+P.ign)+' 部','#948da6'],
-    ['　其中專書',`${B.land+B.infl+B.mid+B.ign} 本`],
-    ['　其中論文',`${P.land+P.infl+P.mid+P.ign} 篇`],
+    ['§','職位與資源'],
+    ['教職',job],
+    ['科技部計畫',grants+' / 30 件'],
+    ['就業市場運氣',(luck>=0?'+':'')+luck,'#948da6'],
+    ['產出係數','×'+mult.toFixed(2),'#948da6'],
+    ['§','學術專書　'+nBooks+' 本'],
+    ['劃時代經典',B.land+' 本',B.land?'#d4a24c':'#948da6'],
+    ['有影響力',B.infl+' 本'],
+    ...(repUp?[['　其中靠聲望',repUp+' 本','#948da6']]:[]),
+    ['平庸無奇',B.mid+' 本','#948da6'],
+    ['乏人問津',B.ign+' 本','#948da6'],
+    ['§','期刊論文　'+nPapers+' 篇'],
+    ['劃時代經典',P.land+' 篇',P.land?'#d4a24c':'#948da6'],
+    ['有影響力',P.infl+' 篇'],
+    ['平庸無奇',P.mid+' 篇','#948da6'],
+    ['乏人問津',P.ign+' 篇','#948da6'],
+    ['§','教學與行政'],
     ['優良教師',teach+' 次'],['系主任',chair?chair+' 年':'沒有當過'],
     ['§','出身與紀錄'],
     ['出身',S.O.n],['大學',TIERS[S.tier].n],
+    ['碩士論文',S.weakPhd?'平庸':'優秀'],
     ['精神科病史',S.mhList.join('、')||'無'],
+    ...loveRows(),
   ]); }
 
 function career(reason){
@@ -1273,11 +1310,20 @@ function career(reason){
     ['文學獎',`參賽 ${S.litEntries}・得獎 ${S.litWins}`],
     ['畢業論文',{great:'優等',ok:'完成',bad:'低空飛過',none:'沒有寫'}[S.thesis]||'—'],
     ['精神科病史',S.mhList.join('、')||'無'],
-    ['感情紀錄',S.relLog.length?S.relLog.join('、').replace(/（[^）]*）/g,''):'無'],
     ['取得屬性',S.traitList.length?S.traitList.join('・'):'無'],
+    ...loveRows(),
   ]); }
 
 /* ================= 結算圖・分享・重播 ================= */
+function loveRows(){
+  const PINK='#dd8fa4', RED='#dd7264', GREY='#948da6';
+  if(!S.relLog.length&&!S.loveFails)return [['§','大學情史'],['沒有談過戀愛','—',GREY]];
+  const rows=[['§','大學情史']];
+  S.relLog.forEach(r=>{ const m=r.match(/^(.+?)（(.+)）$/);
+    rows.push([m?m[2]:r, m?m[1]:'', m&&/背叛|有毒/.test(m[1])?RED:PINK]); });
+  if(S.loveFails)rows.push(['告白失敗',S.loveFails+' 次',GREY]);
+  rows.push(['最後狀態',S.rel?REL[S.rel.kind].n+'中':'單身',GREY]);
+  return rows; }
 function endGame(tone,title,subs,rows){
   S.endInfo={tone,title,subs,rows};
   const sh=document.createElement('div'); sh.className='card';
