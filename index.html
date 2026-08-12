@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#141319">
+<title>人文社科學生模擬器</title>
+<meta name="description" content="16 歲到大學畢業。理論直覺、實證努力、政治、信心、行政、口才——六種能力，一場人文社會科學的長期抗戰。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;700&family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@600;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#141319; --panel:#1c1b24; --panel2:#262430; --edge:#37334a;
+  --paper:#e9e2d1; --dim:#948da6; --brass:#d4a24c; --seal:#c2452f;
+  --good:#8fc79f; --bad:#dd7264; --blue:#84a9d6;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  --sans:'Noto Sans TC',-apple-system,'PingFang TC','Microsoft JhengHei',sans-serif;
+  --serif:'Noto Serif TC','Songti TC',serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:var(--bg);color:var(--paper);font-family:var(--sans);font-size:15px;line-height:1.6;
+  background-image:radial-gradient(ellipse 120% 60% at 50% -10%,#2a243866 0%,transparent 60%);}
+#app{max-width:560px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+/* ---------- 學籍卡 ---------- */
+#board{position:sticky;top:0;z-index:20;background:linear-gradient(#221f2c,#17161d);
+  border-bottom:2px solid var(--edge);padding:10px 14px 8px;box-shadow:0 6px 18px #000a}
+#bd-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+#bd-name{font-family:var(--serif);font-weight:900;font-size:18px;letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bd-name small{color:var(--dim);font-family:var(--sans);font-weight:500;font-size:11.5px;margin-left:6px}
+#bd-team{color:var(--brass);font-size:12.5px;font-weight:700;letter-spacing:.06em;white-space:nowrap;text-align:right}
+#bd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+.bd-cell{background:#100f15;border:1px solid var(--edge);border-radius:5px;padding:4px 6px 3px;text-align:center}
+.bd-cell b{display:block;font-family:var(--mono);font-size:17px;font-weight:700;color:var(--brass);
+  text-shadow:0 0 8px #d4a24c44;line-height:1.2}
+.bd-cell span{font-size:10px;color:var(--dim);letter-spacing:.15em}
+#lamps{display:flex;gap:14px;justify-content:center;margin-top:7px}
+.lamp{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--dim);letter-spacing:.12em}
+.lamp i{width:9px;height:9px;border-radius:1px;background:#2a2636;border:1px solid #40395a;display:inline-block}
+.lamp.on{color:var(--paper)} .lamp.on i{background:var(--seal);box-shadow:0 0 8px var(--seal);border-color:var(--seal)}
+/* ---------- 紀錄 ---------- */
+#bd-mh{display:flex;gap:5px;justify-content:center;margin-top:6px;flex-wrap:wrap}
+.mh{font-size:10.5px;padding:1px 8px;border-radius:99px;border:1px solid;letter-spacing:.06em;font-weight:700}
+.mh.dep{color:#8fa4d6;border-color:#8fa4d6;background:#8fa4d612}
+.mh.adhd{color:#d6a84f;border-color:#d6a84f;background:#d6a84f12}
+.mh.bip{color:#c77fd0;border-color:#c77fd0;background:#c77fd012}
+.mh.str{color:var(--dim);border-color:var(--edge)}
+#log{flex:1;padding:14px 14px 20px;display:flex;flex-direction:column;gap:10px}
+.card{background:var(--panel);border:1px solid var(--edge);border-radius:8px;padding:12px 14px;
+  animation:pop .25s ease;overflow-wrap:anywhere}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.card h4{font-family:var(--serif);font-size:13px;letter-spacing:.18em;color:var(--paper);font-weight:600;margin-bottom:6px;
+  display:flex;align-items:center;gap:8px}
+.card h4::before{content:'';width:9px;height:9px;background:var(--seal);border-radius:1px;flex:none}
+.card.gold h4::before{background:var(--brass)} .card.bad h4::before{background:var(--bad)}
+.card.good h4::before{background:var(--good)} .card.info h4::before{background:var(--blue)}
+.card p{font-size:14px} .card p+p{margin-top:4px}
+.up{color:var(--good);font-weight:700}.dn{color:var(--bad);font-weight:700}.hl{color:var(--brass);font-weight:700}
+.statline{font-family:var(--mono);font-size:12.5px;color:var(--paper);background:#100f15;border:1px dashed var(--edge);
+  border-radius:5px;padding:6px 8px;margin-top:6px;line-height:1.8}
+.trait{display:inline-block;font-size:12px;padding:1px 8px;border-radius:3px;
+  background:#100f15;border:1px solid var(--brass);color:var(--brass);margin:3px 4px 0 0;font-weight:700}
+.yr-head{text-align:center;color:var(--dim);font-size:11px;letter-spacing:.3em;padding:8px 0 0;cursor:pointer;user-select:none;font-family:var(--mono)}
+.yr-head:hover{color:var(--brass)}
+.yr-block.collapsed .yr-body{display:none}
+.yr-block.collapsed .yr-head::after{content:' ▸'}
+.yr-block:not(.collapsed) .yr-head.has-body::after{content:' ▾'}
+/* ---------- 操作區 ---------- */
+#act{position:sticky;bottom:0;z-index:20;background:linear-gradient(#17161dee,#141319);border-top:2px solid var(--edge);
+  padding:12px 14px calc(12px + env(safe-area-inset-bottom));backdrop-filter:blur(6px)}
+#act .title{font-size:12px;letter-spacing:.18em;color:var(--dim);margin-bottom:8px;font-weight:700}
+.btn{display:block;width:100%;background:var(--panel2);border:1px solid var(--edge);color:var(--paper);
+  font-family:var(--sans);font-size:15px;font-weight:700;border-radius:7px;padding:11px 14px;margin-top:8px;
+  cursor:pointer;text-align:left;transition:.15s}
+.btn:active{transform:scale(.98)} .btn:hover{border-color:var(--brass)}
+.btn:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.btn small{display:block;font-weight:400;font-size:12px;color:var(--dim);margin-top:2px}
+.btn.main{background:linear-gradient(#3a3050,#292139);border-color:#544470;text-align:center}
+.btn.warn{border-color:#6a3c3c}
+.btn:disabled{opacity:.35;cursor:default}
+/* 稿紙格骰 */
+#dice{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.die{width:44px;height:44px;background:var(--paper);color:#17151c;font-family:var(--mono);
+  font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center;
+  border:1.5px solid #c2452f99;position:relative;box-shadow:0 2px 0 #0006}
+.die::before{content:'';position:absolute;inset:0;pointer-events:none;background:
+  linear-gradient(to right,transparent calc(50% - .5px),#c2452f30 calc(50% - .5px),#c2452f30 calc(50% + .5px),transparent calc(50% + .5px)),
+  linear-gradient(to bottom,transparent calc(50% - .5px),#c2452f30 calc(50% - .5px),#c2452f30 calc(50% + .5px),transparent calc(50% + .5px));}
+.die.used{opacity:.2;transform:scale(.9)} .die.active{outline:3px solid var(--brass);outline-offset:2px}
+.die.six{color:var(--seal)}
+.abrow{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--edge);
+  border-radius:6px;padding:7px 10px;margin-top:6px;cursor:pointer;user-select:none}
+.abrow:active{background:var(--panel2)}
+.abrow .nm{width:80px;font-size:13.5px;font-weight:700;flex:none}
+.abrow .bar{flex:1;height:8px;background:#100f15;border-radius:2px;overflow:hidden;position:relative}
+.abrow .bar i{display:block;height:100%;background:linear-gradient(90deg,#544470,var(--brass));transition:.2s}
+.abrow .bar em{position:absolute;top:-2px;bottom:-2px;width:2px;background:#d4a24c88}
+.abrow .val{font-family:var(--mono);width:60px;text-align:right;font-size:14px;flex:none;line-height:1.15}
+.abrow .val b{color:var(--good)}
+.abrow.capped,.abrow.locked{opacity:.4;cursor:default}
+#act .row2{display:flex;gap:8px}#act .row2 .btn{flex:1;text-align:center}
+/* 開場 */
+#start{position:fixed;inset:0;z-index:50;background:var(--bg);overflow-y:auto;
+  background-image:radial-gradient(ellipse 120% 50% at 50% -5%,#33294acc,transparent 60%)}
+#start .wrap{max-width:560px;margin:0 auto;padding:36px 22px 60px}
+#seal{width:56px;height:56px;border:2.5px solid var(--seal);border-radius:2px;display:flex;align-items:center;
+  justify-content:center;font-family:var(--serif);font-weight:900;font-size:15px;color:var(--seal);
+  letter-spacing:2px;line-height:1.05;text-align:center;transform:rotate(-3deg)}
+#start h1{font-family:var(--serif);font-size:33px;font-weight:900;letter-spacing:.06em;line-height:1.3;margin-top:16px}
+#start h1 em{font-style:normal;color:var(--brass)}
+#start .sub{color:var(--dim);margin:10px 0 8px;font-size:13.5px;letter-spacing:.06em}
+#start .ver{color:var(--seal);font-size:12px;letter-spacing:.1em;margin-bottom:20px}
+.field{margin-top:18px}
+.field label{display:block;font-size:12px;letter-spacing:.22em;color:var(--dim);font-weight:700;margin-bottom:8px}
+.field input{width:100%;background:var(--panel);border:1px solid var(--edge);border-radius:6px;color:var(--paper);
+  font-family:var(--sans);font-size:16px;padding:11px 14px;outline:none}
+.field input:focus{border-color:var(--brass)}
+.seg{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.seg button{background:var(--panel);border:1px solid var(--edge);border-radius:6px;color:var(--dim);
+  font-family:var(--sans);font-size:14.5px;font-weight:700;padding:10px 8px;cursor:pointer;text-align:left}
+.seg button small{display:block;font-weight:400;font-size:11px;color:#7d7590;margin-top:2px;line-height:1.45}
+.seg button.on{background:var(--panel2);color:var(--brass);border-color:var(--brass)}
+.seg button.on small{color:#a99a7e}
+#odds{display:flex;flex-direction:column;gap:5px}
+.odd{display:flex;align-items:center;gap:8px;font-size:13px}
+.odd .on{width:76px;flex:none;font-weight:700}
+.odd .ob{flex:1;height:9px;background:#100f15;border:1px solid var(--edge);position:relative}
+.odd .ob i{display:block;height:100%;background:var(--seal);opacity:.75}
+.odd .op{width:38px;text-align:right;font-family:var(--mono);font-size:12px;color:var(--dim);flex:none}
+.oddsnote{font-size:11.5px;color:var(--dim);margin-top:8px;letter-spacing:.04em}
+.oddsnote a{color:var(--blue);margin-left:6px}
+.seedline{font-family:var(--mono);font-size:12px;color:var(--dim);margin-top:22px;line-height:1.8}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+#btn-restart{background:none;border:1px solid var(--edge);color:var(--dim);border-radius:5px;
+ font-size:14px;line-height:1;padding:4px 8px;margin-left:8px;cursor:pointer;flex:none}
+#act-toggle{display:block;margin:0 auto -4px;background:#100f15;border:1px solid var(--edge);
+ border-bottom:none;color:var(--dim);font-size:11px;padding:3px 14px;border-radius:7px 7px 0 0;cursor:pointer}
+#act.collapsed{display:none!important}
+</style>
+</head>
+<body>
+<div id="start">
+  <div class="wrap">
+    <div id="seal">人文<br>社科</div>
+    <h1>人文社科<br><em>學生模擬器</em></h1>
+    <p class="sub">理論直覺・實證努力・政治・信心・行政・口才。<br>六種能力，決定你在學術食物鏈的位置。</p>
+    <p class="ver">▎本版本：16 歲 → 22 歲（大學畢業）</p>
+    <div class="field"><label>姓名</label><input id="in-name" maxlength="10" placeholder="例如：陳彥廷"></div>
+    <div class="field"><label>出身　命運分配表</label>
+      <div id="odds"></div>
+      <p class="oddsnote">出身由命運抽選，按下開始才會揭曉。<a href="#" id="force-toggle">指定出身</a></p>
+      <div class="seg" id="seg-org" style="display:none"></div>
+    </div>
+    <button class="btn main" style="margin-top:26px" id="btn-start">開始人生 ▸ 十六歲的夏天</button>
+    <p class="seedline">命運種子
+      <input id="seed-show" maxlength="24" style="width:110px;background:#100f15;color:var(--brass);border:1px solid var(--edge);border-radius:4px;padding:2px 6px;font-family:inherit;font-size:12px;text-align:center">
+      · <a href="#" id="seed-re" style="color:var(--blue)">換一個</a><br>相同種子＋相同選擇＝相同人生</p>
+  </div>
+</div>
+<div id="app">
+  <header id="board" style="display:none">
+    <div id="bd-top"><div id="bd-name"></div><div id="bd-team"></div><button id="btn-restart" title="重新開始">↺</button></div>
+    <div id="bd-grid">
+      <div class="bd-cell"><b id="bd-age">16</b><span>年齡</span></div>
+      <div class="bd-cell"><b id="bd-year">2026</b><span>年份</span></div>
+      <div class="bd-cell"><b id="bd-ovr">30</b><span>綜合</span></div>
+      <div class="bd-cell"><b id="bd-rep">0</b><span>聲望</span></div>
+    </div>
+    <div id="lamps">
+      <span class="lamp" id="lp0"><i></i>年初進修</span>
+      <span class="lamp" id="lp1"><i></i>年度事件</span>
+      <span class="lamp" id="lp2"><i></i>年末結算</span>
+    </div>
+    <div id="bd-mh"></div>
+  </header>
+  <main id="log"></main>
+  <button id="act-toggle" style="display:none">⌄ 收合選項</button>
+  <footer id="act" style="display:none"></footer>
+</div>
+<script>
+/* ================= 錯誤可見化 ================= */
+function showFatal(err){
+  const box=document.createElement('div');
+  box.style.cssText='position:fixed;left:10px;right:10px;bottom:10px;z-index:999;background:#2a1416;border:1px solid #dd7264;'+
+    'color:#ffdad4;font:12px/1.6 monospace;padding:10px 12px;border-radius:8px;white-space:pre-wrap;max-height:45vh;overflow:auto';
+  box.textContent='執行錯誤（請把這段訊息回報）\n'+(err&&(err.stack||err.message)||err);
+  document.body.appendChild(box);
+}
+window.addEventListener('error',e=>showFatal(e.error||e.message));
+
+/* ================= RNG（種子化） ================= */
+let SEED = new URLSearchParams(location.search).get('seed') || Math.random().toString(36).slice(2,10);
+let _s = 0;
+function seedInit(str){ _s = 1779033703; for(let i=0;i<str.length;i++){ _s = Math.imul(_s ^ str.charCodeAt(i), 3432918353); _s = _s<<13 | _s>>>19; } }
+function R(){ _s|=0; _s = _s + 0x6D2B79F5 |0; let t = Math.imul(_s ^ _s>>>15, 1|_s); t = t + Math.imul(t ^ t>>>7, 61|t) ^ t; return ((t ^ t>>>14)>>>0)/4294967296; }
+const ri=(a,b)=>a+Math.floor(R()*(b-a+1));
+const pick=a=>a[Math.floor(R()*a.length)];
+const chance=p=>R()*100<p;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const $=id=>document.getElementById(id);
+function scrollBottom(){ requestAnimationFrame(()=>window.scrollTo(0,document.body.scrollHeight)); }
+
+/* ================= 能力定義 ================= */
+const KEYS=['th','em','po','cf','ad','sp'];
+const ABL={th:'理論直覺',em:'實證努力',po:'政治',cf:'信心',ad:'行政',sp:'口才'};
+const AB_MAX=80, BAR=80;
+
+/* 出身：s = 初始值區間、p = 潛力上限區間（未列者採基準）；w = 抽選權重 */
+const BASE={s:[20,30],p:[55,65]};
+const ORIGINS={
+ mid :{n:'都會中產', w:45, d:'沒有多特別的優勢，也沒有多特別的理由。', ab:{}},
+ town:{n:'小鎮做題家', w:20, d:'你比誰都會寫考卷，只是沒人問過你在想什麼。',
+       ab:{em:{s:[30,40],p:[70,80]}, ad:{p:[70,80]}, th:{p:[42,50]}}},
+ prof:{n:'教授世家', w:10, camp:true, d:'你從小就知道學者也是人。',
+       ab:{po:{s:[30,40],p:[70,80]}, ad:{s:[30,40],p:[70,80]}, em:{s:[25,35]}}},
+ art :{n:'文藝家傳', w:10, d:'這不過是你們家的家常音樂。',
+       ab:{th:{s:[30,40],p:[70,80]}, sp:{s:[30,40],p:[70,80]}, cf:{s:[30,40],p:[70,80]}}},
+ poor:{n:'偏鄉貧寒', w:10, camp:true, d:'城裡人真會玩，可你不會。',
+       ab:{po:{s:[10,15],p:[45,55]}, cf:{s:[10,15],p:[45,55]}}},
+ cap :{n:'資本之家', w:5, dice:2, d:'低垂的果實從沒缺過，除了苦工。',
+       ab:{em:{p:[38,45]}, cf:{s:[35,45],p:[75,80]}, po:{p:[75,80]}, sp:{p:[75,80]}}},
+};
+function drawOrigin(){ const tot=Object.values(ORIGINS).reduce((a,o)=>a+o.w,0); let r=R()*tot;
+  for(const k of Object.keys(ORIGINS)){ r-=ORIGINS[k].w; if(r<0)return k; } return 'mid'; }
+
+const TIERS={
+ emp :{n:'帝大霸權', d:'骰數固定 5–6', dice:()=>ri(5,6), pot:{th:6,po:4}},
+ top :{n:'頂大系統', d:'骰數固定 4 以上', dice:()=>{const r=R();return r<0.4?4:r<0.8?5:6;}, pot:{th:3,em:3}},
+ nat :{n:'國立大學', d:'一般骰數', dice:()=>{const r=R();return r<0.35?3:r<0.75?4:r<0.95?5:6;}, pot:{}},
+ priv:{n:'私校聯盟', d:'骰數不超過 3', dice:()=>ri(2,3), pot:{sp:4,ad:4}},
+ intl:{n:'跨國鈔能力', d:'骰數固定 5–6｜政治無法升級', dice:()=>ri(5,6), pot:{sp:4,cf:6}},
+};
+
+/* ================= 狀態 ================= */
+let S=null, stepQ=[], _curYearBody=null;
+const MAX_YEARS=12;
+function newState(name,org){
+  const O=ORIGINS[org], ab={}, pot={};
+  KEYS.forEach(k=>{ const m=O.ab[k]||{}, sr=m.s||BASE.s, pr=m.p||BASE.p;
+    ab[k]=ri(sr[0],sr[1]);
+    pot[k]=Math.max(ab[k]+5, ri(pr[0],pr[1]));
+  });
+  return {name,org,O,ab,pot,carry:{},traits:{},traitList:[],
+    age:16,year:new Date().getFullYear(),rep:0,six:0,tier:null,lockPo:false,
+    stage:'HS',log:[],
+    litEntries:0,litWins:0,stress:0,dep:null,mania:null,mhList:[],
+    thesis:null,dualMajor:null,dest:null,
+    grade:0,lost:0,skipNext:false,lostYear:false,crisis:0,hsGov:false};
+}
+function abCost(k){ const cur=S.ab[k],pk=S.pot[k];
+  let c=cur>=70?4:cur>=55?3:cur>=40?2:1; if(cur>=pk)c*=3; return c; }
+function addAb(k,v){ const o=S.ab[k]; let cur=o,bud=v+(S.carry[k]||0);
+  while(bud>0&&cur<AB_MAX){ let cost=cur>=70?4:cur>=55?3:cur>=40?2:1; if(cur>=S.pot[k])cost*=3;
+    if(bud>=cost){bud-=cost;cur++;} else break; }
+  S.carry[k]=cur>=AB_MAX?0:bud; S.ab[k]=cur; return cur-o; }
+/* 事件加值：不吃成長成本，直接加減 */
+function bump(k,v){ const o=S.ab[k]; S.ab[k]=clamp(o+v,1,AB_MAX); return S.ab[k]-o; }
+function bumps(list){ /* [['th',6],['po',10]] → 文字 */
+  return list.map(([k,v])=>{ const d=bump(k,v);
+    return `${ABL[k]} <b class="${d>=0?'up':'dn'}">${d>0?'+':''}${d}</b>`; }).join('　');
+}
+function trait(key,name,desc,tone){ if(S.traits[key])return; S.traits[key]=true; S.traitList.push(name);
+  card(tone||'gold','取得屬性：'+name,desc+`<div style="margin-top:6px"><span class="trait">${name}</span></div>`); }
+function ovr(){ const w=[0.30,0.24,0.18,0.13,0.09,0.06];
+  const a=KEYS.map(k=>S.ab[k]).sort((x,y)=>y-x);
+  return Math.round(a.reduce((s,v,i)=>s+v*w[i],0)); }
+function schoolScore(){ const a=S.ab; return a.em*0.5+a.th*0.3+a.sp*0.1+a.cf*0.1; }
+function scholarType(){ const a=S.ab;
+  const arr=KEYS.map(k=>[k,a[k]]).sort((x,y)=>y[1]-x[1]);
+  if(arr[0][1]<34)return '尚未定型';
+  if(arr[0][1]-arr[1][1]<=3&&arr[0][1]>=52)return '六邊形戰士';
+  return {th:'理論怪物',em:'田野工作者',po:'學術政治家',cf:'無畏發言者',ad:'行政大師',sp:'口才型選手'}[arr[0][0]];
+}
+function goodP(){ return S.traits.gifted?70:50; }
+
+/* ================= UI ================= */
+function logTarget(){ return _curYearBody||$('log'); }
+function card(cls,title,html){ const d=document.createElement('div'); d.className='card '+cls;
+  d.innerHTML=(title?`<h4>${title}</h4>`:'')+html; logTarget().appendChild(d); scrollBottom(); }
+function divider(t){ const log=$('log'); const blocks=log.querySelectorAll('.yr-block');
+  const prev=blocks[blocks.length-1];
+  if(prev){ const h=prev.querySelector('.yr-head'); if(h&&prev.querySelector('.yr-body').children.length)h.classList.add('has-body'); }
+  const pp=blocks[blocks.length-2]; if(pp)pp.classList.add('collapsed');
+  const block=document.createElement('div'); block.className='yr-block';
+  const head=document.createElement('div'); head.className='yr-head'; head.textContent=t;
+  const body=document.createElement('div'); body.className='yr-body';
+  head.onclick=()=>block.classList.toggle('collapsed');
+  block.appendChild(head); block.appendChild(body); log.appendChild(block); _curYearBody=body;
+  const nb=log.querySelectorAll('.yr-block');
+  if(nb.length>MAX_YEARS){ for(let i=0;i<nb.length-MAX_YEARS;i++)nb[i].remove(); } }
+function board(phase){
+  $('bd-name').innerHTML=`${S.name}<small>${S.O.n}·${scholarType()}${S.traits.gifted?' ★':''}</small>`;
+  $('bd-team').innerHTML=`<span style="color:var(--brass)">${stageLabel()}</span>`;
+  $('bd-age').textContent=S.age; $('bd-year').textContent=S.year;
+  $('bd-ovr').textContent=ovr(); $('bd-rep').textContent=S.rep;
+  [0,1,2].forEach(i=>$('lp'+i).classList.toggle('on',i===phase));
+  const mh=[];
+  if(S.dep)mh.push('<span class="mh dep">憂鬱症</span>');
+  if(S.traits.adhd)mh.push('<span class="mh adhd">ADHD</span>');
+  if(S.traits.bipolar)mh.push(`<span class="mh bip">躁鬱症・${maniaPhase()===0?'躁期':'鬱期'}</span>`);
+  if(S.stress>0)mh.push(`<span class="mh str">壓力 ${S.stress}</span>`);
+  $('bd-mh').innerHTML=mh.join(''); }
+function stageLabel(){
+  if(S.lostYear)return '休學療養';
+  if(S.grade<3)return '高'+['一','二','三'][S.grade];
+  return TIERS[S.tier].n+'（大'+['一','二','三','四'][clamp(S.grade-3,0,3)]+'）'; }
+function actClear(){ const a=$('act'); a.innerHTML=''; a.classList.remove('collapsed');
+  const t=$('act-toggle'); if(t)t.style.display='none'; }
+function actSync(){ const a=$('act'),t=$('act-toggle'); if(!t)return;
+  const has=a.innerHTML.trim()!==''; t.style.display=has?'block':'none';
+  t.textContent=a.classList.contains('collapsed')?'⌃ 展開選項':'⌄ 收合選項'; }
+function choose(title,opts){ actClear(); const a=$('act'); a.classList.remove('collapsed');
+  if(title)a.innerHTML=`<div class="title">${title}</div>`;
+  opts.forEach(o=>{ const b=document.createElement('button');
+    b.className='btn'+(o.main?' main':'')+(o.warn?' warn':'');
+    b.innerHTML=o.t+(o.s?`<small>${o.s}</small>`:'');
+    if(o.dis){ b.disabled=true; }else{ b.onclick=()=>{ actClear(); o.f(); }; }
+    a.appendChild(b); });
+  actSync(); scrollBottom(); }
+function allocUI(dice,label,done){
+  actClear(); const a=$('act'); let idx=0, hist=[];
+  a.innerHTML=`<div class="title">${label}</div><div id="al-top"></div><div id="al-rows"></div><div class="row2" id="al-btm"></div>`;
+  const top=$('al-top'),rows=$('al-rows'),btm=$('al-btm');
+  const locked=k=>S.lockPo&&k==='po';
+  function render(){
+    top.innerHTML='<div id="dice">'+dice.map((v,i)=>`<div class="die ${i<idx?'used':''} ${i===idx?'active':''} ${v===6?'six':''}">${v}</div>`).join('')+'</div>';
+    rows.innerHTML='';
+    KEYS.forEach(k=>{ const v=S.ab[k],cap=v>=AB_MAX,lk=locked(k);
+      const r=document.createElement('div'); r.className='abrow'+(cap?' capped':'')+(lk?' locked':'');
+      const pk=S.pot[k],cst=abCost(k),cr=S.carry[k]||0;
+      r.innerHTML=`<span class="nm">${ABL[k]}${lk?' 🔒':''}</span><span class="bar"><i style="width:${Math.min(100,v/BAR*100)}%"></i><em style="left:${Math.min(100,pk/BAR*100)}%"></em></span>`+
+        `<span class="val">${v}<small style="opacity:.5">/${pk}</small>${cst>1?`<span style="display:block;opacity:.5;font-size:10.5px;margin-top:-2px">${cr}/${cst}</span>`:''}</span>`;
+      if(!cap&&!lk&&idx<dice.length)r.onclick=()=>{ const amt=dice[idx],pc=S.carry[k]||0;
+        const got=addAb(k,amt); hist.push([k,got,pc]); idx++; render(); board(0); };
+      rows.appendChild(r); });
+    btm.innerHTML='';
+    const u=document.createElement('button'); u.className='btn'; u.style.textAlign='center';
+    u.textContent='↩ 復原'; u.disabled=!hist.length; u.style.opacity=hist.length?'1':'.35';
+    if(hist.length)u.onclick=()=>{ const [k,got,pc]=hist.pop(); S.ab[k]-=got; S.carry[k]=pc; idx--; render(); board(0); };
+    btm.appendChild(u);
+    const allCap=KEYS.every(k=>S.ab[k]>=AB_MAX||locked(k));
+    if(idx>=dice.length||allCap){ const c=document.createElement('button'); c.className='btn main';
+      c.textContent=(idx<dice.length&&allCap)?'無處可加，捨棄剩餘骰子 ▸':'確認 ▸';
+      c.onclick=()=>{ actClear(); done(); }; btm.appendChild(c); }
+    actSync(); }
+  render(); scrollBottom(); }
+
+/* ================= 年度流程 ================= */
+function nextStep(){ const f=stepQ.shift(); if(f)f(); }
+function startYear(){ divider(`${S.year} 年 · ${S.age} 歲 · ${stageLabel()}`);
+  if(S.lostYear){ lostYearCard(); return; }
+  stepQ=[phaseTrain,phaseEvent,phaseLit,phaseMental]; nextStep(); }
+function lostYearCard(){ board(1);
+  card('info','休學療養',pick([
+    '你在家裡住了一年。前三個月幾乎沒有出門，後來開始每天走到巷口的便利商店，再走回來。',
+    '那一年你沒有讀任何一本學術著作。你養了一隻貓，學會做三道菜，體重回到高中的樣子。'])+
+    `<div class="statline">同屆的人已經升上下一個年級了。<br>你錯過了一整年：沒有進修骰、沒有事件、沒有任何累積。</div>`);
+  choose('',[{t:'▸ 一年後',main:true,f:()=>{ S.lostYear=false; endYear(); }}]); }
+function endYear(){
+  if(S.skipNext){ S.skipNext=false; S.age++; S.year++; S.lost++; S.lostYear=true; startYear(); return; }
+  if(S.grade>=6){ finale(); return; }
+  S.age++; S.year++; S.grade++; if(S.grade>=3)S.stage='U';
+  if(S.tier==='intl'){ const d=bump('cf',3);
+    card('good','盎格魯撒克遜的善意',`教授常說你的研究主題很有意思，説你很有學術天份。信心 <b class="up">+${d}</b>`); }
+  startYear(); }
+/* --- 年初：自主進修擲骰 --- */
+function phaseTrain(){ board(0);
+  let n = S.stage==='HS' ? (()=>{const r=R();return r<0.35?3:r<0.75?4:r<0.95?5:6;})() : TIERS[S.tier].dice();
+  n += S.O.dice||0;
+  const dice=[]; let newSix=0;
+  for(let i=0;i<n;i++){ const v=S.traits.gifted?ri(4,6):ri(1,6); dice.push(v);
+    if(v===6&&S.age<20&&!S.traits.gifted){S.six++;newSix++;} }
+  let msg=`${S.stage==='HS'?'課餘自習':'學期進修'}擲出 <b class="hl">${n}</b> 顆骰${S.O.dice?`（${S.O.n}：+${S.O.dice} 顆）`:''}。`;
+  if(newSix)msg+=` 出現「6」累計 <b class="hl">${S.six}/5</b> 次。`;
+  card('','年初進修',msg);
+  if(S.six>=5&&!S.traits.gifted&&S.age<20){
+    const cands=KEYS.filter(k=>S.ab[k]<S.pot[k]-5); const bl=[];
+    for(let i=0;i<2&&cands.length;i++){ const j=Math.floor(R()*cands.length); const k=cands.splice(j,1)[0];
+      S.pot[k]=Math.min(AB_MAX,S.pot[k]+8); bump(k,4); bl.push(`${ABL[k]} <b class="up">+4</b>（上限 +8 → ${S.pot[k]}）`); }
+    trait('gifted','天縱英才',`20 歲前五度擲出「6」。你不是特別努力的那種人，你是那種讓努力的人心裡難受的人——從今以後每顆骰<b class="hl">永久固定 4 點以上</b>，事件好結果機率提升至 <b class="hl">70%</b>。`+(bl.length?`<div class="statline">${bl.join('<br>')}</div>`:''));
+    board(0); }
+  choose('',[{t:`▸ 分配進修成果（${dice.length} 顆骰）`,main:true,
+    f:()=>allocUI(dice,'分配進修成果（點能力套用｜40／55／70 以上成長遞減，超過潛力上限成本 ×3）',()=>nextStep())}]); }
+/* --- 年中：事件 --- */
+function phaseEvent(){ board(1);
+  if(S.grade===0)e16();
+  else if(S.grade===1)e17();
+  else if(S.grade===2)e18();
+  else eUni(); }
+/* --- 年末：文學獎 → 精神健康 --- */
+function phaseLit(){ board(2); litAward(); }
+function phaseMental(){ board(2); mentalPhase(); }
+
+/* ================= 16 歲：社團 ================= */
+function e16(){
+  choose('高一下・社團博覽會',[
+    {t:'加入校刊社',s:'理論直覺 +4　口才 +2',f:()=>{
+      card('good','校刊社',`你第一次讀到有人把你說不出口的東西寫成一整頁。<div class="statline">${bumps([['th',4],['sp',2]])}</div>`); nextStep(); }},
+    {t:'加入辯論社',s:'口才 +5　政治 +2　信心 +1',f:()=>{
+      card('good','辯論社',`你學會了一件事：立場可以抽籤決定。<div class="statline">${bumps([['sp',5],['po',2],['cf',1]])}</div>`); nextStep(); }},
+    {t:'選進學生會',s:'政治 +4　行政 +4　※大學必定出現學生會長改選',f:()=>{
+      S.hsGov=true;
+      card('good','學生會',`你經手了人生第一份預算表，也第一次知道誰跟誰不合。<br><span style="color:var(--dim);font-size:12.5px">有些人是進去混一年就走，有些人從此再也離不開那間辦公室。</span><div class="statline">${bumps([['po',4],['ad',4]])}</div>`); nextStep(); }},
+    {t:'哪都不去，補習班衝刺',s:'實證努力 +6　信心 −1',f:()=>{
+      card('info','北車',`你的世界只剩下講義、模考、排名。有些能力就是在這種地方磨出來的。<div class="statline">${bumps([['em',6],['cf',-1]])}</div>`); nextStep(); }},
+  ]); }
+
+/* ================= 17 歲：人社營 ================= */
+function e17(){
+  const auto=!!S.O.camp;
+  const sc=S.ab.th*0.4+S.ab.sp*0.3+S.ab.em*0.2+S.ab.po*0.1;
+  const p=auto?100:clamp(25+(sc-30)*1.5,8,60);
+  choose('高二暑假・全國人文社會科學營',[
+    {t:'報名人社營',main:true,s:auto?`${S.O.n}：保障錄取 100%`:`預估錄取率 ${p.toFixed(0)}%（基準 25%，看理論直覺與口才）`,
+     f:()=>{
+      if(chance(p)){
+        trait('camp','人社營',`兩週的營隊裡，你認識了未來二十年會一直在大學裡遇到的那些人。學術，從來不只是讀書。<div class="statline">${bumps([['po',10],['th',6]])}</div>`);
+      }else{
+        card('bad','未錄取',`備取名單上沒有你的名字。你反覆讀了三次那封信，然後把它刪掉。<div class="statline">${bumps([['cf',-2]])}</div>`);
+      } nextStep(); }},
+    {t:'不報名，把暑假留給自己',s:'什麼都不會發生',f:()=>{
+      card('','平凡的暑假',`樹上開著杜鵑，白雲飄過窗前，你什麼都沒做。多年後你會想起這個暑假。`); nextStep(); }},
+  ]); }
+
+/* ================= 18 歲：篩選機制 ================= */
+function e18(){
+  const sc=schoolScore();
+  const tier = sc>=42?'emp' : sc>=36?'top' : sc>=30?'nat' : 'priv';
+  const det=`<div class="statline">實證努力 ${S.ab.em}×0.5　理論直覺 ${S.ab.th}×0.3<br>口才 ${S.ab.sp}×0.1　信心 ${S.ab.cf}×0.1<br>綜合分數 <b class="hl">${sc.toFixed(1)}</b>　（42 / 36 / 30 為分水嶺）</div>`;
+  card('info','大學入學篩選',`三年的積累，被壓縮成一個數字。<br>${det}`);
+  const go=t=>()=>{ enterUni(t); nextStep(); };
+  const opts=[{t:`進入 ${TIERS[tier].n}`,main:true,s:TIERS[tier].d,f:go(tier)}];
+  if(S.org==='cap')opts.push({t:'啟動跨國鈔能力',warn:true,
+    s:'直接出國唸書｜骰數固定 5–6、每年信心 +3｜大學期間政治無法升級',f:go('intl')});
+  choose('十八歲的分水嶺',opts); }
+function enterUni(t){
+  S.tier=t; S.stage='U';
+  const T=TIERS[t]; const bl=[];
+  Object.entries(T.pot).forEach(([k,v])=>{ S.pot[k]=Math.min(AB_MAX,S.pot[k]+v); bl.push(`${ABL[k]} 潛力上限 <b class="up">+${v}</b> → ${S.pot[k]}`); });
+  if(t==='intl'){ S.lockPo=true; S.rep+=10; }
+  if(t==='emp')S.rep+=15; if(t==='top')S.rep+=8; if(t==='nat')S.rep+=3;
+  const txt={
+   emp:'從此以後，你說的每一句話都會自動附贈一點可信度與責任。',
+   top:'很好的學校，很好的系，只是每次自我介紹完，對方總會多問一句「那你怎麼沒去帝大」。',
+   nat:'不上不下，剛剛好。你會花很多年才明白，這個位置其實最需要意志力。',
+   priv:'系上一半的人在準備轉學考。你決定不轉，這個決定會跟著你很久。',
+   intl:'你在異國的機場拖著兩個行李箱。台灣的排名遊戲，從此與你無關——你玩的是另一個。',
+  }[t];
+  card(t==='priv'?'bad':'gold',TIERS[t].n,txt+(bl.length?`<div class="statline">${bl.join('<br>')}</div>`:'')); }
+
+/* ================= 文學獎（累積體制） ================= */
+function litRate(){ return Math.min(85, 15 + S.litEntries*5 + S.litWins*10); }
+function litAward(){
+  const ok=S.ab.th>39, p=litRate();
+  const bonus=S.litEntries*5+S.litWins*10;
+  const detail = ok
+    ? `得獎機率 <b>${p}%</b>${bonus?`（基礎 15%＋參賽 ${S.litEntries}次 +${S.litEntries*5}%＋得獎 ${S.litWins}次 +${S.litWins*10}%）`:'（基礎 15%）'}`
+    : `<b>0%</b>　未達基礎門檻：理論直覺 40，目前 ${S.ab.th}`;
+  choose(`${S.year} 年・文學獎徵稿`,[
+    {t:'投稿', main:ok, s:`${detail}｜寫作佔掉時間：實證努力 −1｜落選：信心 −2`,
+     f:()=>{ submitLit(); nextStep(); }},
+    {t:'今年不投', s:'沒有任何變化，累積也不會增加', f:()=>{
+      card('','文學獎徵稿',pick([
+        '總感覺還不夠好，你把寫完的稿留在硬碟裡。',
+        '想想其實也沒有什麼話要說。',
+        '今年不投。理由你說得出十個，真正的那個不在裡面。',
+        '你決定把這段時間留給該做的事。文學獎明年還會再辦。'])); nextStep(); }},
+  ]); }
+function submitLit(){
+  bump('em',-1); const p=litRate(); S.litEntries++;
+  const acc=()=>`<div class="statline" style="opacity:.75">累積：參賽 ${S.litEntries} 次・得獎 ${S.litWins} 次　→　明年得獎機率 <b class="hl">${litRate()}%</b></div>`;
+  if(S.ab.th>39&&chance(p)){
+    S.litWins++;
+    if(S.ab.th>S.ab.em){
+      S.rep+=20;
+      if(!S.traits.prodigy){
+        card('gold','全國文學獎',`頒獎典禮上，評審說你的文字「有一種不合年齡的透明」。你其實只是把痛苦寫得比較好看。<br><span class="hl">聲望 +20</span>`);
+        trait('prodigy','早慧文青',`太早被肯定的人，會用一輩子來驗證那次肯定是不是誤會。（此屬性一生只取得一次）<div class="statline">${bumps([['th',2],['cf',6],['po',2]])}</div>`+acc());
+      }else{
+        card('gold','再一次全國大獎',`第 ${S.litWins} 座。評審裡有兩個人去年也在。他們記得你的名字，也記得你的句法。<br>得獎的人會越得越多，這件事沒有人會說破。<div class="statline">${bumps([['th',1],['cf',3],['po',3]])}</div><span class="hl">聲望 +20</span>`+acc());
+      }
+    }else{
+      S.rep+=8;
+      card('good','地方文學獎',`縣府大禮堂，獎金一萬五。你的文字很紮實，紮實到評審說「像一篇好的報告」。<div class="statline">${bumps([['th',-4],['cf',4],['em',4]])}</div><span class="hl">聲望 +8</span>`+acc());
+    }
+    return; }
+  if(!(S.ab.th>39)){
+    card('bad','初選未過',pick([
+      '你知道自己還寫不出那種東西，但還是投了。信封寄出的那一刻你就後悔了。',
+      '初選名單三十個人，沒有你。你安慰自己說評審看的是別的東西。',
+      '你把稿子重讀一遍，這次讀出了問題在哪。太晚了。'])+
+      `<div class="statline">${bumps([['cf',-2]])}</div>`+acc());
+    return; }
+  card('bad','落選',pick([
+    '得獎名單公布了。你把自己的稿子重讀一遍，還是覺得寫得不錯。這就是最傷的地方。',
+    '入圍名單上有你認識的人。你按了讚，然後關掉手機。',
+    '評審講評裡有一句「有些作品野心過大而失焦」。你確定那說的是你。'])+
+    `<div class="statline">${bumps([['cf',-2]])}</div>`+acc());
+}
+
+/* ================= 三階機率事件引擎 ================= */
+function tierEvent(cfg,done){
+  const sc=cfg.score();
+  const calc=sp=>{
+    let g=Math.round(clamp((sc-cfg.pivot)*cfg.slope+(cfg.gbase||22)+(sp?18:0),3,sp?80:66));
+    let o=Math.round(clamp(38+(sc-cfg.pivot)*0.6+(sp?4:0),18,58));
+    if(g+o>96)o=96-g;
+    return [g,o,100-g-o]; };
+  const a=calc(false), b=calc(true);
+  const opts=[
+    {t:cfg.t1||'認真準備',main:true,s:`大成功 <b>${a[0]}%</b>　普通 ${a[1]}%　失敗 ${a[2]}%`,f:()=>go(false)},
+    {t:'全力衝刺',warn:true,s:`大成功 <b>${b[0]}%</b>　普通 ${b[1]}%　失敗 ${b[2]}%　｜代價：信心 −3、壓力 +1`,f:()=>go(true)},
+  ];
+  if(cfg.skip)opts.push({t:cfg.skip.t,s:cfg.skip.s,f:()=>{ cfg.skip.f(); done(); }});
+  choose(cfg.title,opts);
+  function go(sp){
+    if(sp){ S.stress++;
+      card('info','全力衝刺',pick([
+        '你連續兩週睡在研究室的沙發上，靠咖啡因撐著。',
+        '你把所有能推掉的事都推掉了，包括那個問你最近好不好的朋友。',
+        '截稿前那幾天你沒怎麼吃東西。你告訴自己，撐過去就好。'])+
+        `<div class="statline">${bumps([['cf',-3]])}　壓力 <b class="dn">+1</b> → ${S.stress}</div>`); }
+    const [g,o]=calc(sp), r=R()*100;
+    if(r<g)cfg.great(); else if(r<g+o)cfg.ok(); else cfg.fail();
+    done(); }
+}
+
+/* ================= 大學事件 ================= */
+function eUni(){ const y=S.grade-2;
+  if(y===1)u1(); else if(y===2)u2(); else if(y===3)u3(); else u4(); }
+
+function u1(){
+  choose('大一・你發現這裡沒有標準答案',[
+    {t:'衝系學會與社團',s:'政治 +5　口才 +4　實證努力 −2',f:()=>{
+      card('good','人脈的複利',`你記得每個學長姊的研究題目，也記得誰在哪個老師底下。這些以後都有用。<div class="statline">${bumps([['po',5],['sp',4],['em',-2]])}</div>`); evJournal(); }},
+    {t:'泡在圖書館',s:'理論直覺 +5　實證努力 +3　政治 −2',f:()=>{
+      card('good','總圖地下室',`你一個人啃完了那本沒人啃得完的書。沒有人知道，但你自己知道。<div class="statline">${bumps([['th',5],['em',3],['po',-2]])}</div>`); evJournal(); }},
+    {t:'打工分擔家計',s:'行政 +6　實證努力 +2　信心 −2',f:()=>{
+      card('info','基本工資',`同學在討論傅科的時候，你在算今天的班表。你學會了效率，代價是那些聊天。<div class="statline">${bumps([['ad',6],['em',2],['cf',-2]])}</div>`); evJournal(); }},
+    {t:'談一場戀愛',s:'理論直覺 +1　信心 +6　口才 +3　實證努力 −3',f:()=>{
+      card('good','大一的春天',`有人願意聽你講兩個小時你正在想的事。你第一次感覺到自己是被理解的。<div class="statline">${bumps([['cf',6],['sp',3],['em',-3]])}</div>`); evJournal(); }},
+  ]); }
+function u2(){
+  const both=S.ab.th>=45&&S.ab.em>=45;
+  const nx=()=>{ const g=govDestiny(); if(g)evStudentGov(g); else if(chance(50))evDual(); else evStudentGov(null); };
+  choose('大二・學派的分歧',[
+    {t:'走理論路線',s:'理論直覺 +7、上限 +6　實證努力 −3',f:()=>{
+      S.pot.th=Math.min(AB_MAX,S.pot.th+6);
+      trait('theory','理論派',`你決定相信：世界需要先被重新描述，才有可能被改變。<div class="statline">${bumps([['th',7],['em',-3]])}<br>理論直覺 潛力上限 <b class="up">+6</b> → ${S.pot.th}</div>`); nx(); }},
+    {t:'走實證路線',s:'實證努力 +7、上限 +6　理論直覺 −3',f:()=>{
+      S.pot.em=Math.min(AB_MAX,S.pot.em+6);
+      trait('empiric','實證派',`你決定相信：沒有資料的話，都只是話。<div class="statline">${bumps([['em',7],['th',-3]])}<br>實證努力 潛力上限 <b class="up">+6</b> → ${S.pot.em}</div>`); nx(); }},
+    {t:'兩邊都要',s:both?'理論 +4　實證 +4　信心 +2':'需要 理論直覺 ≥45 且 實證努力 ≥45',dis:!both,f:()=>{
+      trait('both','方法論通才',`你在兩個讀書會之間跑來跑去，兩邊的人都覺得你不夠純粹。但你確實兩邊都聽得懂。<div class="statline">${bumps([['th',4],['em',4],['cf',2]])}</div>`); nx(); }},
+    {t:'還沒想好',s:'信心 −2　保留彈性',f:()=>{
+      card('','懸而未決',`你說你還在探索。有些人一輩子都在探索。<div class="statline">${bumps([['cf',-2]])}</div>`); nx(); }},
+  ]); }
+function u3(){
+  const opts=[];
+  if(S.ab.em>=45||S.org==='poor')opts.push({t:'跟老師下田野',s:'實證努力 +7　行政 +3　聲望 +10'+(S.org==='poor'?'　※出身相關':''),f:()=>{
+    S.rep+=10; card('gold','田野',`你在一個沒有訊號的地方待了六週。逐字稿打了四萬字。那些人的臉，你到現在還記得。<div class="statline">${bumps([['em',7],['ad',3]])}</div><span class="hl">聲望 +10</span>`);
+    if(S.org==='poor'){ S.pot.cf=Math.min(AB_MAX,S.pot.cf+12); S.pot.po=Math.min(AB_MAX,S.pot.po+8);
+      trait('resonance','底層共鳴',`第三天你才發現，那個村子跟你長大的地方是同一種安靜。同行的同學拿著訪綱問「您覺得您被剝奪了什麼」，而你連問都不必問。<div class="statline">${bumps([['cf',6]])}<br>信心 潛力上限 <b class="up">+12</b> → ${S.pot.cf}　政治 潛力上限 <b class="up">+8</b> → ${S.pot.po}</div>`); }
+    evExchange(); }});
+  if(S.ab.po>=35)opts.push({t:'當教授的研究助理',s:'行政 +6　政治 +4　實證努力 +3　理論 −2',f:()=>{
+    S.rep+=6; card('good','老師的 RA',`你負責核銷、排會議、催進度。你也因此看見了學術的後台——那裡沒有一句是理論。<div class="statline">${bumps([['ad',6],['po',4],['em',3],['th',-2]])}</div><span class="hl">聲望 +6</span>`); evExchange(); }});
+  opts.push({t:'什麼都不做，好好活著',s:'信心 +3　壓力 −1',f:()=>{
+    S.stress=Math.max(0,S.stress-1);
+    card('','空白的一年',`你把大三拿來睡覺、看電影、跟朋友喝酒。多年後這是你唯一不後悔的一年。<div class="statline">${bumps([['cf',3]])}　壓力 <b class="up">−1</b> → ${S.stress}</div>`); evExchange(); }});
+  choose('大三・機會與代價',opts); }
+
+/* --- a 雙主修 --- */
+function evDual(){ tierEvent({
+  title:'大二・雙主修申請',
+  score:()=>S.ab.em*0.5+S.ab.ad*0.3+S.ab.th*0.2, pivot:40, slope:1.7,
+  great:()=>{ S.dualMajor='full'; S.rep+=8; S.pot.ad=Math.min(AB_MAX,S.pot.ad+6);
+    trait('dual','雙主修',`你拿到了另一個系的學位，代價是連續三個學期修 28 學分。你在兩個系館之間跑，兩邊都覺得你不是自己人。<div class="statline">${bumps([['ad',5],['em',5],['cf',-2]])}<br>行政 潛力上限 <b class="up">+6</b> → ${S.pot.ad}　<span class="hl">聲望 +8</span></div>`); },
+  ok:()=>{ S.dualMajor='minor';
+    card('good','改申請輔系',`雙主修沒上，你退而求其次修了輔系。履歷上還是多一行，只是那一行你自己知道分量。<div class="statline">${bumps([['ad',3],['em',3]])}</div>`); },
+  fail:()=>{ card('bad','未通過',`系上只收四個人，你的成績排第九。你在公布欄前面站了一下就走了。<div class="statline">${bumps([['cf',-3]])}</div>`); },
+},()=>nextStep()); }
+
+/* --- d 競選學生會 --- */
+/* 命定競選：高中做過學生會，或政治／口才是你最強的一項 */
+function govDestiny(){
+  if(S.hsGov)return 'hs';
+  const top=KEYS.slice().sort((a,b)=>S.ab[b]-S.ab[a])[0];
+  return (top==='po'||top==='sp')?(top==='po'?'po':'sp'):null; }
+function evStudentGov(why){
+  if(why){ const t={
+      hs:['回到那間辦公室','高中那三年你就在做這件事。開學第二週，學長把你約去談，說今年需要一個人扛。<br><span style="color:var(--dim)">你說你要想一下。你們都知道你會答應。</span>'],
+      po:['沒有人問你要不要選','你只是幫忙處理了幾件事，然後名字就開始出現在別人的口中。到了連署階段，你已經沒有退路了。'],
+      sp:['你的嘴巴替你報了名','系上座談會你講了五分鐘，隔天就有三個人來問你要不要選。你講話的時候，人們會停下來聽——這件事在這裡是一種資產。'],
+    }[why];
+    card('info',t[0],t[1]+`<div class="statline" style="opacity:.8">命定事件：${why==='hs'?'高中學生會經歷':(why==='po'?'政治是你的最強項':'口才是你的最強項')}${why==='hs'?'｜選情分數 <b class="hl">+6</b>（做過的人比較知道怎麼做）':''}</div>`); }
+  tierEvent({
+  title:'大二・學生會長改選',
+  score:()=>S.ab.sp*0.4+S.ab.po*0.35+S.ab.cf*0.25+(S.hsGov?6:0), pivot:33, slope:1.8,
+  great:()=>{ S.rep+=10;
+    trait('presid','學生會長',`你是校園進步派的共主，你當選了，然後花一整年學會被自己人罵是什麼感覺。<div class="statline">${bumps([['po',8],['sp',6],['ad',5],['em',-4]])}<span class="hl">　聲望 +10</span></div>`); },
+  ok:()=>{ card('good','落選，回到學代會，繼續工作',`開票那晚你領先了整晚，可你漏算醫學院校區的選票，多年後這場難堪的逆轉還是會被提起，不過你確實喜歡這些事情。<div class="statline">${bumps([['po',3],['sp',3],['ad',2]])}</div>`); },
+  fail:()=>{ card('bad','慘敗',`你的選票比廢票還要少。開票那晚有人安慰你說「大家只是不認識真正的你」，這句話比落選更難聽。<div class="statline">${bumps([['cf',-5],['po',1]])}</div>`); },
+},()=>nextStep()); }
+
+/* --- c 投稿學生刊物 --- */
+function evJournal(){ tierEvent({
+  title:'大一・系刊徵稿',
+  score:()=>S.ab.th*0.5+S.ab.sp*0.3+S.ab.em*0.2, pivot:37, slope:1.8, gbase:24,
+  great:()=>{ S.rep+=8;
+    card('gold','封面故事',`你的文章被放在封面，主編說這是這幾年最好的學生稿。有教授在課堂上提到它，沒說作者是誰，但你知道。<div class="statline">${bumps([['th',4],['sp',3],['cf',4]])}</div><span class="hl">聲望 +8</span>`); },
+  ok:()=>{ card('good','順利刊登',`一萬字，排在第 34-37 頁。<div class="statline">${bumps([['th',2],['sp',2],['cf',2]])}</div>`); },
+  fail:()=>{ card('bad','退稿',`主編說「內容很扎實，但看不到你自己的論點」。你想反駁，發現他說得對。<div class="statline">${bumps([['th',1],['cf',-3]])}</div>`); },
+},()=>nextStep()); }
+
+/* --- b 交換學生 --- */
+function evExchange(){ const rich=(S.org==='cap'||S.tier==='intl');
+  tierEvent({
+  title:'大三・交換學生甄選'+(rich?'（家裡出得起）':''),
+  score:()=>S.ab.th*0.3+S.ab.sp*0.3+S.ab.cf*0.2+S.ab.ad*0.2+(rich?8:0), pivot:37, slope:1.6,
+  great:()=>{ S.rep+=15; S.pot.th=Math.min(AB_MAX,S.pot.th+5);
+    trait('exch','交換學生',`你去了那間你只在註腳裡看過的學校。研討課上第一次舉手，講得結結巴巴。<div class="statline">${bumps([['th',6],['cf',6],['sp',5]])}<br>理論直覺 潛力上限 <b class="up">+5</b> → ${S.pot.th}　<span class="hl">聲望 +15</span></div>`); },
+  ok:()=>{ S.rep+=6; card('good','備取上了一間',`不是第一志願，但你還是去了。那一年你學會自己搬家、自己生病、自己過生日。<div class="statline">${bumps([['th',3],['cf',4],['sp',3]])}</div><span class="hl">聲望 +6</span>`); },
+  fail:()=>{ card('bad','未錄取',`名額六個，語言檢定卡在最後一關。你看著同學的限時動態一則一則跳出來。<div class="statline">${bumps([['cf',-4]])}</div>`); },
+},()=>evNSC()); }
+
+/* --- 國科會大專生研究計畫 --- */
+function evNSC(){ tierEvent({
+  title:'大三・國科會大專生研究計畫',
+  t1:'寫計畫書投出去',
+  score:()=>S.ab.th*0.35+S.ab.em*0.35+S.ab.po*0.2+S.ab.ad*0.1, pivot:46, slope:1.7, gbase:18,
+  great:()=>{ S.rep+=20;
+    trait('nsc','大專生國科會計畫主持人',`你的計畫不但過了，還拿到研究創作獎。指導教授在系上餐敘時特地提你的名字——你第一次感覺到，這條路上有人願意讓出一點位置給你。<div class="statline">${bumps([['th',5],['em',5],['ad',3],['po',3]])}<span class="hl">　聲望 +20</span></div>`); },
+  ok:()=>{ S.rep+=10; card('good','計畫通過',`六萬塊研究費，扣掉逐字稿費和交通費剩不到兩萬。但那份核定通知你截圖存了很久。<div class="statline">${bumps([['em',4],['ad',3],['th',2]])}</div><span class="hl">聲望 +10</span>`); },
+  fail:()=>{ card('bad','未通過',`審查意見只有兩行：「研究問題不夠聚焦」。你至少學會了計畫書的格式，這東西以後你會寫一輩子。<div class="statline">${bumps([['ad',2],['cf',-3]])}</div>`); },
+  skip:{t:'不申請',s:'需要指導教授點頭，也需要一整個暑假',f:()=>{
+    card('','沒有申請',pick([
+      '你問了老師，他說「你想清楚題目再來找我」。你沒有再去找他。',
+      '報名表在資料夾裡放到過期。那個暑假你過得很輕鬆，也很空。'])); }},
+},()=>nextStep()); }
+
+/* --- 大四：畢業論文（選擇性） --- */
+function u4(){
+  const sc=S.ab.th*0.4+S.ab.em*0.4+S.ab.ad*0.2;
+  const det=`<div class="statline">理論直覺 ${S.ab.th}×0.4　實證努力 ${S.ab.em}×0.4　行政 ${S.ab.ad}×0.2<br>論文分數 <b class="hl">${sc.toFixed(1)}</b>　（56 優等／42 及格）</div>`;
+  choose('大四・畢業論文（系上沒有強制）',[
+    {t:'寫，而且要寫好',main:true,s:`論文分數 ${sc.toFixed(1)}｜影響推甄與博班資格`,f:()=>{
+      if(sc>=56){ S.rep+=25; S.thesis='great';
+        trait('honors','優等論文',`口試委員說：「這個題目你應該繼續做下去。」你回家後把那句話寫在便利貼上，貼了很多年。${det}<span class="hl">聲望 +25</span>`);
+      }else if(sc>=42){ S.rep+=10; S.thesis='ok';
+        card('good','順利完成',`不是什麼驚天動地的作品，但每一節都是你自己寫的。這在這個年代已經不容易。${det}<span class="hl">聲望 +10</span>`);
+      }else{ S.thesis='bad';
+        card('bad','低空飛過',`口試委員翻了翻，問了三個問題，你答不出兩個。他嘆了口氣，還是簽了名。${det}<div class="statline">${bumps([['cf',-5]])}</div>`);
+      } nextStep(); }},
+    {t:'不寫，把時間拿去準備出路',s:'沒有作品｜推甄扣分｜信心 +2、壓力 −1',f:()=>{
+      S.thesis='none'; S.stress=Math.max(0,S.stress-1);
+      card('','沒有畢業論文',`系上沒有強制，你就沒有寫。多年後每次有人問起你的大學論文，你都要解釋一次。<div class="statline">${bumps([['cf',2]])}　壓力 <b class="up">−1</b> → ${S.stress}</div>`); nextStep(); }},
+  ]); }
+
+/* ================= 精神健康系統 ================= */
+function maniaPhase(){ return S.mania?(S.age-S.mania.since)%2:-1; }
+function mentalPhase(){
+  if(S.traits.bipolar)maniaCycle();
+  depressionDecay();
+  checkADHD(); checkBipolar(); checkDepression();
+  if(crisisCheck())return;
+  if(S.dep){ depressionTurn(); return; }
+  choose('',[{t:'▸ 進入下一年',main:true,f:()=>endYear()}]);
+}
+function maniaCycle(){
+  if(maniaPhase()===0){
+    card('gold','躁期',pick([
+      '你三天寫完了兩萬字，而且你確定那些字是好的。你回信給每一個人，語氣熱烈得讓他們有點怕。',
+      '這幾個月你同時開了四個題目，每一個都覺得可以做成書。你睡四小時就飽了。'])+
+      `<div class="statline">${bumps([['th',5],['em',4],['cf',5],['po',3],['sp',3]])}</div>`);
+  }else{
+    card('bad','鬱期',pick([
+      '躁期寫的那兩萬字，你現在一個字都讀不下去。信箱裡有十七封未讀。',
+      '你答應的事全部沒做。你不是不想做，你是連開檔案都做不到。'])+
+      `<div class="statline">${bumps([['cf',-6],['ad',-5],['po',-3],['sp',-3]])}</div>`);
+  }
+}
+function checkADHD(){
+  if(S.traits.adhd||S.ab.ad>=23||S.age<17)return;
+  if(!chance(60))return;
+  S.mhList.push('ADHD');
+  trait('adhd','ADHD',`你終於去了身心科。醫生問完之後說：「你不是懶，你是注意力的分配方式跟別人不一樣。」<br>那些跳躍的、抓不住的東西，原來是同一件事的兩面——你想得比誰都遠，也永遠交不出期限內的東西。<div class="statline">${bumps([['th',9],['em',-5]])}</div>`,'info');
+}
+function checkBipolar(){
+  if(S.traits.bipolar||S.ab.th<55||S.ab.cf>=26)return;
+  if(!chance(40))return;
+  S.mania={since:S.age+1}; S.mhList.push('躁鬱症');
+  trait('bipolar','躁鬱症',`你以為那是靈感。連續幾個月的高速運轉之後，是同樣長度的什麼都做不了。<br>診斷書上的字很短。從今以後，你的產出會有節奏——只是那節奏不歸你管。<span style="color:var(--dim);font-size:12px">（終身屬性・每年在躁期與鬱期之間交替）</span>`,'info');
+}
+function checkDepression(){
+  if(S.dep)return;
+  if(S.age<17)return;
+  const risk=Math.min(55,(S.ab.cf<22?(22-S.ab.cf)*3.5:0)+S.stress*6);
+  if(risk<=0||!chance(risk))return;
+  const deb={sp:-6,po:-5,ad:-5,em:-6};
+  const applied={}; Object.entries(deb).forEach(([k,v])=>{ applied[k]=bump(k,v); });
+  S.dep={years:0,deb:applied}; S.mhList.push('憂鬱症');
+  card('bad','憂鬱症',`一開始只是不想回訊息，後來是不想出門，最後是不想起床。<br>你還是能讀書，只是讀完什麼都沒留下。你以為這是你的問題。`+
+    `<div class="statline">${Object.entries(applied).map(([k,v])=>`${ABL[k]} <b class="dn">${v}</b>`).join('　')}<br><span style="opacity:.7">暫時性減損，治癒後歸還｜未治癒：每年信心持續下降</span></div>`);
+}
+function depressionDecay(){
+  if(!S.dep)return;
+  if(S.dep.years>0){ const d=bump('cf',-4);
+    card('bad','還沒有好',pick([
+      '又一年。你學會了在別人面前表現得正常，這件事本身就很累。',
+      '你把「我最近不太好」在對話框裡打了又刪。最後傳出去的是一個貼圖。'])+
+      `<div class="statline">信心 <b class="dn">${d}</b></div>`); }
+  S.dep.years++; }
+function restoreDep(){ const t=Object.entries(S.dep.deb).map(([k,v])=>`${ABL[k]} <b class="up">+${-v}</b>`).join('　');
+  Object.entries(S.dep.deb).forEach(([k,v])=>bump(k,-v)); S.dep=null; return t; }
+function depressionTurn(){
+  if(!S.dep)return;
+  const restore=()=>restoreDep();
+  choose('要處理它嗎',[
+    {t:'看醫生，開始服藥',main:true,s:'治癒｜理論直覺永久 −6',f:()=>{
+      const r=restore(); const d=bump('th',-6); S.stress=Math.max(0,S.stress-2);
+      S.mhList[S.mhList.lastIndexOf('憂鬱症')]='憂鬱症（藥物）';
+      card('good','藥物治療',`兩個月後你發現自己會餓了，也會想出門了。<br>只是那種一頁書讀下去就通到底的感覺不見了。你不確定是藥，還是你已經不是那個人了。<div class="statline">${r}<br>理論直覺 <b class="dn">${d}</b>（永久）</div>`); endYear(); }},
+    {t:'冥想、運動、規律作息',s:'治癒｜實證努力永久 −6',f:()=>{
+      const r=restore(); const d=bump('em',-6); S.stress=Math.max(0,S.stress-2);
+      S.mhList[S.mhList.lastIndexOf('憂鬱症')]='憂鬱症（自療）';
+      card('good','慢慢走出來',`每天六點起床、走路四十分鐘、十一點睡。你確實好了。<br>代價是你再也回不去那種為了一份報告連熬三天的狀態——你的身體不肯了。<div class="statline">${r}<br>實證努力 <b class="dn">${d}</b>（永久）</div>`); endYear(); }},
+    {t:'撐著，這沒什麼',warn:true,s:'不治療｜維持減損｜每年信心持續下降',f:()=>{
+      card('','撐著',pick([
+        '你查了掛號費和門診時間，然後關掉分頁。',
+        '你想，等這學期過完就好了。每個學期你都這樣想。'])); endYear(); }},
+  ]);
+}
+
+/* ================= 崩潰・住院・壞結局 ================= */
+function crisisCheck(){
+  if(!S.dep||S.ab.cf>=15)return false;
+  if(S.crisis>=1){ badEnding(); return true; }
+  S.crisis=1; hospitalize(); return true; }
+function hospitalize(){
+  S.skipNext=true; S.stress=0;
+  const r=restoreDep();
+  const i=S.mhList.lastIndexOf('憂鬱症'); if(i>=0)S.mhList[i]='憂鬱症（住院）';
+  const dth=bump('th',-4), dem=bump('em',-4), dsp=bump('sp',-3);
+  const dcf=bump('cf',Math.min(12,Math.max(0,20-S.ab.cf)));
+  const hs=S.grade<3;
+  card('bad','崩潰・住院療養',
+    (hs?`你已經三週沒有進教室了。導師打了七通電話，最後是你媽媽請假來把你帶走。<br>`
+       :`你已經三週沒有進教室了。最後是室友聯絡了你家人，他們開了四個小時的車上來把你接走。<br>`)+
+    `醫院的日光燈很亮，作息表貼在牆上，每天六點半有人叫你起床。你在那裡待了一整個冬天。<br>`+
+    `<span style="color:var(--dim)">${hs?'學校幫你辦了休學。班上的座位空了一個，沒有人特別問起。':'系上幫你辦了休學。你的名字從那一屆的名單上消失，沒有人特別問起。'}</span>`+
+    `<div class="statline">${r}<br>理論直覺 <b class="dn">${dth}</b>　實證努力 <b class="dn">${dem}</b>　口才 <b class="dn">${dsp}</b>`+
+    (dcf?`　信心 <b class="up">+${dcf}</b>（治療穩定）`:'')+
+    `<br>壓力歸零｜<b class="hl">下一年休學，完全停止累積</b></div>`);
+  choose('',[{t:'▸ 明年見',main:true,f:()=>endYear()}]); }
+function badEnding(){
+  board(2); divider('結局');
+  const rows=KEYS.map(k=>`${ABL[k]} <b>${S.ab[k]}</b>`).join('　');
+  card('bad','壞結局・人社系484有毒',
+    `復學之後你撐了不到一個學期。<br>`+
+    `<br>`+
+    `“看著窗外的光<br>`+
+    `分不清是路燈還是太陽<br>`+
+    `仔細搜索著自己的身體<br>`+
+    `試著找出一道合理的傷<br>`+
+    `卻還是得說謊”<br>`+
+    `<div class="statline">${S.O.n}出身・${S.tier?TIERS[S.tier].n:'高中'}・${S.age} 歲離開<br>${rows}<br>`+
+    `精神科病史　${S.mhList.join('、')||'無'}｜住院 ${S.crisis} 次</div>`);
+  card('info','',`<span style="color:var(--dim);font-size:12.5px">這是人們眼中最壞的一種結局，但你相信，自找的苦痛比不請自來的更有尊嚴。`);
+  choose('',[{t:'↺ 換一個人生',main:true,f:()=>restart()}]); }
+
+/* ================= 結算與畢業去向 ================= */
+function finale(){
+  board(2); divider(`${S.age} 歲 · 畢業`);
+  const rows=KEYS.map(k=>{ const v=S.ab[k],pk=S.pot[k];
+    return `<div class="abrow" style="cursor:default"><span class="nm">${ABL[k]}</span><span class="bar"><i style="width:${Math.min(100,v/BAR*100)}%"></i><em style="left:${Math.min(100,pk/BAR*100)}%"></em></span><span class="val">${v}<small style="opacity:.5">/${pk}</small></span></div>`; }).join('');
+  const tl=S.traitList.length?S.traitList.map(t=>`<span class="trait">${t}</span>`).join(''):'<span style="color:var(--dim)">無</span>';
+  card('gold',`${S.age} 歲・畢業`,
+    `${S.O.n}出身的 <b class="hl">${S.name}</b>，從 ${TIERS[S.tier].n} 畢業${S.lost?`（休學 ${S.lost} 年，延畢）`:''}。`+
+    `<div style="margin-top:8px">${rows}</div>`+
+    `<div class="statline" style="margin-top:8px">學者類型　<b class="hl">${scholarType()}</b>　綜合 <b class="hl">${ovr()}</b>　聲望 <b class="hl">${S.rep}</b><br>文學獎　參賽 ${S.litEntries} 次・得獎 ${S.litWins} 次${S.mhList.length?`<br>精神科病史　${S.mhList.join('、')}${S.crisis?`｜住院 ${S.crisis} 次`:''}`:''}</div>`+
+    `<div style="margin-top:8px;font-size:12px;color:var(--dim);letter-spacing:.15em">已取得屬性</div><div>${tl}</div>`);
+  gradChoice(); }
+
+function msRate(){
+  let sc=S.ab.th*0.3+S.ab.em*0.3+S.ab.po*0.2+S.ab.ad*0.1+S.rep*0.1;
+  sc+= S.thesis==='great'?8 : S.thesis==='ok'?3 : S.thesis==='none'?-8 : 0;
+  return {sc,p:Math.round(clamp((sc-32)*3.2+30,5,95))}; }
+function phdOK(){ return S.ab.th>=55&&S.rep>=45&&(S.thesis==='great'||S.traits.nsc); }
+function gradChoice(){
+  const m=msRate(), ok=phdOK();
+  choose('畢業去向',[
+    {t:'推甄碩士班',main:true,s:`錄取率 <b>${m.p}%</b>（理論 30%／實證 30%／政治 20%／行政 10%＋聲望＋論文 ${S.thesis==='great'?'+8':S.thesis==='ok'?'+3':S.thesis==='none'?'−8':'0'}）｜落榜則進入職場`,
+     f:()=>{ if(chance(m.p)){
+        card('gold','推甄上了',`備審資料七十頁，面試十五分鐘。放榜那天你反覆重新整理了四十次頁面。<br>你還不知道，真正的篩選現在才開始。`);
+        toBeContinued('碩士班'); }
+      else{ card('bad','落榜',`正取六名、備取三名，沒有你。有人跟你說「再考一年就好」，但你算了一下家裡還能撐多久。<div class="statline">${bumps([['cf',-6]])}</div>`);
+        career('碩士落榜'); } }},
+    {t:'直攻博士班',s:ok?'預備研究生資格審查｜學術路線的極端解':'需要 理論直覺 ≥55、聲望 ≥45，且有優等論文或國科會計畫',dis:!ok,
+     f:()=>{ card('gold','直攻博士',`老師說：「你要想清楚，這是十年的事。」你說你想清楚了。你當然沒有。`);
+        toBeContinued('博士班'); }},
+    {t:'投入職場',warn:true,s:'進入結局｜依 理論直覺・信心・政治・行政 判定',
+     f:()=>career('主動求職')},
+  ]); }
+function toBeContinued(where){
+  card('info','待續',`你進入了 ${where}。<br>指導教授的選擇、國科會計畫、期刊審查、研討會的政治、兼任講師的鐘點費、六年條款——<br><span style="color:var(--dim)">下一版本：23 → 45 歲。</span>`);
+  choose('',[{t:'↺ 換一個人生',main:true,f:()=>restart()}]); }
+
+function career(reason){
+  const sc=S.ab.th*0.35+S.ab.cf*0.30+S.ab.po*0.20+S.ab.ad*0.15;
+  const cand=[['th',S.ab.th],['cf',S.ab.cf],['po',S.ab.po],['ad',S.ab.ad]].sort((a,b)=>b[1]-a[1]);
+  const dom=cand[0][0];
+  const band=sc>=50?0:sc>=38?1:2;
+  const E={
+   0:{th:['文化評論者','一家還算有名的出版社要你當編輯，兩年後你開始在副刊寫專欄。<br>薪水很低，但每次有人在書店拿起你編的書，你都覺得值得。'],
+      cf:['自媒體創作者','你開了一個談社會議題的頻道。第八個月開始有業配，第二年你辭掉了正職。<br>你把人社訓練變成了說故事的能力，系上老師不太理解，但你的訂閱者理解。'],
+      po:['政治幕僚','你進了立委辦公室當助理，三年後成為辦公室主任。<br>你寫的新聞稿上不會有你的名字，但那些法案的第三條第二項是你熬夜改出來的。'],
+      ad:['高考文官','你考上高考三級，分發到部裡。<br>同事說你是他們見過最會寫公文的人。你偶爾會想起大學讀過的那些理論，然後繼續處理下一個案子。']},
+   1:{th:['補教業講師','你在補習班教學測國文與社會，講得比誰都好。<br>學生說你上課會講到福柯，你笑說那是職業病。你也確實沒有那麼想離開這裡。'],
+      cf:['企業行銷企劃','你進了一間中型企業做品牌企劃。面試官說「人社背景的比較會講故事」。<br>你確實會。只是你偶爾會想，講故事是不是本來該用在別的地方。'],
+      po:['NGO 倡議工作者','你進了一個議題型 NGO，薪水三萬八，一個人做三個人的事。<br>你很累，但你知道自己在做的是對的事情——這句話你會反覆說很多年。'],
+      ad:['大學系辦助理','你在母校的系辦上班，處理招生、排課、核銷。<br>你認識每一個教授，也看得懂每一次系務會議的暗流。你就在那條路旁邊，站了很久。']},
+   2:{th:['接案文字工作者','你接文案、寫稿、做逐字稿。有一單沒一單。<br>你還在寫自己的東西，只是越來越少跟人提起。'],
+      cf:['服務業','你在一間連鎖店做正職。班表輪三班，領班說你很聰明。<br>你偶爾在深夜的休息室滑到大學同學的動態，然後鎖螢幕。'],
+      po:['保險與直銷','你進了保險業，因為那是唯一沒有嫌你科系的地方。<br>你的口才很好，人脈也還可以。你告訴自己這只是過渡。'],
+      ad:['派遣行政','你在一間公司做約聘行政，一年一簽。<br>工作內容不難，你做得很好。沒有人問過你大學讀什麼。']},
+  };
+  const [title,body]=E[band][dom];
+  const rows=KEYS.map(k=>`${ABL[k]} <b>${S.ab[k]}</b>`).join('　');
+  card(band===0?'gold':band===1?'good':'bad','結局・'+title,
+    `${body}<div class="statline">${reason}｜職涯判定分數 <b class="hl">${sc.toFixed(1)}</b><br>理論直覺 ${S.ab.th}×0.35　信心 ${S.ab.cf}×0.30　政治 ${S.ab.po}×0.20　行政 ${S.ab.ad}×0.15<br>${rows}</div>`);
+  const coda = S.traits.prodigy&&band===2 ? '十六歲那年你得過全國文學獎。這件事現在沒有人記得，包括你自己也很少想起。'
+    : S.dep ? '你沒有去看醫生。那件事還在，只是你學會了不去碰它。'
+    : S.traits.adhd ? '你到現在還是會在會議中途走神。但你已經知道那不是你的錯了。'
+    : band===0 ? '你偶爾會夢見系學會的燈。醒來之後照常上班。'
+    : '學術這條路你沒有走。多年後你會發現，走了的人也未必比較快樂。';
+  card('info','後來',coda);
+  choose('',[{t:'↺ 換一個人生',main:true,f:()=>restart()}]); }
+
+/* ================= 開場 ================= */
+(function(){ const t=$('act-toggle');
+  t.onclick=()=>{ $('act').classList.toggle('collapsed');
+    t.textContent=$('act').classList.contains('collapsed')?'⌃ 展開選項':'⌄ 收合選項'; }; })();
+let selOrg=null; /* null = 交給命運 */
+$('odds').innerHTML=Object.entries(ORIGINS).map(([k,v])=>
+  `<div class="odd"><span class="on">${v.n}</span><span class="ob"><i style="width:${v.w/45*100}%"></i></span><span class="op">${v.w}%</span></div>`).join('');
+$('seg-org').innerHTML=Object.entries(ORIGINS).map(([k,v])=>
+  `<button data-v="${k}">${v.n}<small>${v.d}</small></button>`).join('');
+document.querySelectorAll('#seg-org button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#seg-org button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); selOrg=b.dataset.v; });
+$('force-toggle').onclick=e=>{ e.preventDefault();
+  const g=$('seg-org'), open=g.style.display==='none';
+  g.style.display=open?'grid':'none'; e.target.textContent=open?'交給命運':'指定出身';
+  if(!open){ selOrg=null; g.querySelectorAll('button').forEach(x=>x.classList.remove('on')); } };
+$('seed-show').value=SEED;
+$('seed-re').onclick=e=>{e.preventDefault();SEED=Math.random().toString(36).slice(2,10);$('seed-show').value=SEED;};
+function askYes(msg){ try{ return confirm(msg); }catch(e){ return true; } }
+function restart(){ try{ location.reload(); }catch(e){ location.href=location.href; } }
+$('btn-restart').onclick=()=>{ if(askYes('重新開始一段人生？'))restart(); };
+$('btn-start').onclick=()=>{ try{
+  const nm=$('in-name').value.trim()||'賴祥德';
+  const sv=$('seed-show').value.trim(); if(sv)SEED=sv;
+  /* file:// 與部分內嵌檢視器會讓 replaceState 拋 SecurityError，不能讓它擋住開場 */
+  try{ history.replaceState(null,'','?seed='+encodeURIComponent(SEED)); }catch(e){}
+  seedInit(SEED);
+  const org=selOrg||drawOrigin();
+  S=newState(nm,org);
+  $('start').style.display='none'; $('board').style.display=''; $('act').style.display='';
+  const rows=KEYS.map(k=>`${ABL[k]} <b class="hl">${S.ab[k]}</b><span style="opacity:.5">／上限 ${S.pot[k]}</span>`).join('　');
+  card('info','天賦判定',`${S.year} 年，十六歲的 <b class="hl">${S.name}</b>。<br>命運擲出了 <b class="hl">${S.O.n}</b>（${S.O.w}%）——${S.O.d}`+
+    `<div class="statline">${rows}</div>`+
+    `<p style="color:var(--dim);font-size:12px;margin-top:6px">提示：20 歲前累積擲出 5 次「6」可覺醒隱藏屬性。</p>`);
+  startYear();
+  }catch(err){ showFatal(err); } };
+</script>
+</body>
+</html>
