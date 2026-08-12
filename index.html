@@ -133,6 +133,11 @@ body{background:var(--bg);color:var(--paper);font-family:var(--sans);font-size:1
 .odd .op{width:38px;text-align:right;font-family:var(--mono);font-size:12px;color:var(--dim);flex:none}
 .oddsnote{font-size:11.5px;color:var(--dim);margin-top:8px;letter-spacing:.04em}
 .oddsnote a{color:var(--blue);margin-left:6px}
+#byline{margin-top:26px;padding-top:16px;border-top:1px solid var(--edge);
+  font-size:12px;color:#6f6883;letter-spacing:.06em}
+#byline a{color:var(--dim);text-decoration:none;border-bottom:1px solid #4a4360;
+  padding-bottom:1px;transition:.15s;font-weight:700}
+#byline a:hover{color:var(--brass);border-bottom-color:var(--brass)}
 .seedline{font-family:var(--mono);font-size:12px;color:var(--dim);margin-top:22px;line-height:1.8}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 #btn-restart{background:none;border:1px solid var(--edge);color:var(--dim);border-radius:5px;
@@ -147,7 +152,7 @@ body{background:var(--bg);color:var(--paper);font-family:var(--sans);font-size:1
   <div class="wrap">
     <div id="seal">人文<br>社科</div>
     <h1>人文社科<br><em>學生模擬器</em></h1>
-    <p class="sub">理論直覺・實證努力・政治・信心・行政・口才。<br>六種能力，決定你在學術生態鏈的位置。</p>
+    <p class="sub">理論直覺・實證努力・政治・信心・行政・口才。<br>六種能力，決定你在學術生態系的位置。</p>
     <p class="ver">▎本版本：16 歲 → 22 歲（大學畢業）</p>
     <div class="field"><label>姓名</label><input id="in-name" maxlength="10" placeholder="例如：陳彥廷"></div>
     <div class="field"><label>起始年份（十六歲那年）</label>
@@ -167,6 +172,7 @@ body{background:var(--bg);color:var(--paper);font-family:var(--sans);font-size:1
     <p class="seedline">命運種子
       <input id="seed-show" maxlength="24" style="width:110px;background:#100f15;color:var(--brass);border:1px solid var(--edge);border-radius:4px;padding:2px 6px;font-family:inherit;font-size:12px;text-align:center">
       · <a href="#" id="seed-re" style="color:var(--blue)">換一個</a><br>相同種子＋相同選擇＝相同人生</p>
+    <p id="byline">by <a href="https://wandanle.bearblog.dev/" target="_blank" rel="noopener">wandanle</a>　·　在作者的網誌閱讀無關的文章</p>
   </div>
 </div>
 <div id="app">
@@ -258,7 +264,7 @@ function newState(name,org,year){
     litEntries:0,litWins:0,stress:0,dep:null,mania:null,mhList:[],
     thesis:null,dualMajor:null,dest:null,
     grade:0,lost:0,skipNext:false,lostYear:false,crisis:0,hsGov:false,weakPhd:false,
-    rel:null,relLog:[],loveGuaranteed:false,exes:0,loveFails:0};
+    rel:null,relLog:[],loveGuaranteed:false,exes:0,loveFails:0,loveYears:0};
 }
 function abCost(k){ const cur=S.ab[k],pk=S.pot[k];
   let c=cur>=70?4:cur>=55?3:cur>=40?2:1; if(cur>=pk)c*=3; return c; }
@@ -646,7 +652,7 @@ function evNSC(){ tierEvent({
   score:()=>S.ab.th*0.35+S.ab.em*0.35+S.ab.po*0.2+S.ab.ad*0.1, pivot:46, slope:1.7, gbase:18,
   great:()=>{ S.rep+=20;
     trait('nsc','大專生國科會計畫主持人',`你的計畫不但過了，還拿到研究創作獎。指導教授在系上餐敘時特地提你的名字——你第一次感覺到，這條路上有人願意讓出一點位置給你。<div class="statline">${bumps([['th',5],['em',5],['ad',3],['po',3]])}<span class="hl">　聲望 +20</span></div>`); },
-  ok:()=>{ S.rep+=10; card('good','計畫通過',`六萬塊研究費，扣掉逐字稿費和交通費剩不到兩萬。但那份核定通知你截圖存了很久。<div class="statline">${bumps([['em',4],['ad',3],['th',2]])}</div><span class="hl">聲望 +10</span>`); },
+  ok:()=>{ S.rep+=10; card('good','計畫通過',`四萬八千塊研究費，每個月六千塊。但那份核定通知你截圖存了很久。<div class="statline">${bumps([['em',4],['ad',3],['th',2]])}</div><span class="hl">聲望 +10</span>`); },
   fail:()=>{ card('bad','未通過',`審查意見只有兩行：「研究問題不夠聚焦」。你至少學會了計畫書的格式，這東西以後你會寫一輩子。<div class="statline">${bumps([['ad',2],['cf',-3]])}</div>`); },
   skip:{t:'不申請',s:'需要指導教授點頭，也需要一整個暑假',f:()=>{
     card('','沒有申請',pick([
@@ -660,9 +666,9 @@ function u4(){
   choose('大四・畢業論文（系上沒有強制）',[
     {t:'寫，而且要寫好',main:true,s:`論文分數 ${sc.toFixed(1)}｜影響推甄與博班資格`,f:()=>{
       if(sc>=56){ S.rep+=25; S.thesis='great';
-        trait('honors','優等論文',`口試委員說：「這個題目你應該繼續做下去。」${det}<span class="hl">聲望 +25</span>`);
+        trait('honors','學士論文獎',`口試委員說：「這個題目你應該繼續做下去。」${det}<span class="hl">聲望 +25</span>`);
       }else if(sc>=42){ S.rep+=10; S.thesis='ok';
-        card('good','順利完成',`不是什麼驚天動地的作品，但每一節都是你自己寫的。這在這個年代已經不容易。${det}<span class="hl">聲望 +10</span>`);
+        card('good','順利完成',`不是什麼驚天動地的作品，但每一節都是你自己親手寫的。這在這個年代已經不容易。${det}<span class="hl">聲望 +10</span>`);
       }else{ S.thesis='bad';
         card('bad','低空飛過',`口試委員翻了翻，問了三個問題，你答不出兩個。他嘆了口氣，還是簽了名。${det}<div class="statline">${bumps([['cf',-5]])}</div>`);
       } nextStep(); }},
@@ -759,7 +765,7 @@ const REL={
 const AGEQ={
  young:{n:'年幼',d:['小你兩屆的那個人','剛升大一、比你小三歲的那個人','系上直屬學弟妹']},
  peer :{n:'同儕',d:['同班的那個人','隔壁系同屆的那個人','讀書會上坐你對面的那個人']},
- old  :{n:'年長',d:['高你三屆、已經在唸碩班的那個人','系上的兼任助理，大你五歲','在研討會上認識、已經出社會的那個人']},
+ old  :{n:'年長',d:['大你三屆、已經在唸碩班的那個人','系上的兼任助理，大你五歲','在交友軟體上認識、已經出社會的那個人']},
 };
 const FEELQ={
  like   :{n:'感興趣',d:'你確實被吸引——不是因為對方好看，是因為對方講話的方式讓你想一直聽下去。'},
@@ -837,7 +843,7 @@ function settleRomance(p,mode,boost){
   const kind=outcomeKind(p,mode,boost);
   const tag=`${AGEQ[p.age].n}・${FEELQ[p.feel].n}・${mode==='passive'?'被動':'主動'}`;
   if(kind==='betray'){
-    S.exes++; S.relLog.push(`無情背叛（${tag}）`);
+    S.exes++; S.loveYears++; S.relLog.push({k:'無情背叛',tag,y:1});
     const d=bump('cf',-12);
     card('bad','無情背叛',
       (p.age==='old'
@@ -850,8 +856,8 @@ function settleRomance(p,mode,boost){
     else card('info','你撐住了',`你哭了兩個晚上，第三天照常去上課。<br><span style="color:var(--dim)">信心夠厚的人不是不會痛，是痛完之後還站得起來。</span>`);
     nextStep(); return; }
   if(kind==='toxic'){
-    S.rel={kind:'toxic',age:p.age,feel:p.feel,years:0,tag};
-    S.relLog.push(`有毒的關係（${tag}）`);
+    S.relLog.push({k:'有毒的關係',tag,y:1}); S.loveYears++;
+    S.rel={kind:'toxic',age:p.age,feel:p.feel,years:0,tag,li:S.relLog.length-1};
     const d=bump('cf',-10);
     card('bad','有毒的關係',
       '一開始你覺得是自己太敏感。後來你開始為了避免爭吵而預先修改自己說話的方式，'+
@@ -862,16 +868,16 @@ function settleRomance(p,mode,boost){
       beginDepression('你已經分不清楚是這段關係讓你變成這樣，還是你本來就是這樣，所以才留在這裡。');
     nextStep(); return; }
   if(kind==='burn'){
-    S.rel={kind:'burn',age:p.age,feel:p.feel,years:0,tag};
-    S.relLog.push(`相愛相殺（${tag}）`);
+    S.relLog.push({k:'相愛相殺',tag,y:1}); S.loveYears++;
+    S.rel={kind:'burn',age:p.age,feel:p.feel,years:0,tag,li:S.relLog.length-1};
     card('gold','相愛相殺',
       '你們可以為了一個概念吵到凌晨三點，然後和好，然後再吵。<br>'+
       '對方是唯一一個會直接說「你這段在鬼扯」的人，也是唯一一個真的讀完你寫的每一個字的人。<br>'+
       '<span style="color:var(--dim)">你在這段關係裡變得更聰明，也變得更不確定自己值不值得被喜歡。</span>'+
       `<div class="statline">${bumps([['th',6],['sp',5],['cf',-4]])}｜${tag}</div>`);
     nextStep(); return; }
-  S.rel={kind:'stable',age:p.age,feel:p.feel,years:0,tag};
-  S.relLog.push(`穩定交往（${tag}）`);
+  S.relLog.push({k:'穩定交往',tag,y:1}); S.loveYears++;
+  S.rel={kind:'stable',age:p.age,feel:p.feel,years:0,tag,li:S.relLog.length-1};
   card('good','穩定交往',
     pick(['你們的日常很無聊：一起吃飯、一起讀書、一起在深夜的便利商店挑飯糰。',
           '對方會在你趕報告的時候安靜地坐在旁邊做自己的事。你後來才知道這件事有多稀有。'])+
@@ -880,7 +886,8 @@ function settleRomance(p,mode,boost){
   nextStep(); }
 /* --- 已有關係：每年結算 --- */
 function relationshipTick(){
-  S.rel.years++;
+  S.rel.years++; S.loveYears++;
+  if(S.relLog[S.rel.li])S.relLog[S.rel.li].y++;
   const R2=S.rel;
   if(R2.kind==='stable'){
     const y=R2.years;
@@ -995,7 +1002,7 @@ function finale(){
     `${S.O.n}出身的 <b class="hl">${S.name}</b>，從 ${TIERS[S.tier].n} 畢業${S.lost?`（休學 ${S.lost} 年，延畢）`:''}。`+
     `<div style="margin-top:8px">${rows}</div>`+
     `<div class="statline" style="margin-top:8px">學者類型　<b class="hl">${scholarType()}</b>　綜合 <b class="hl">${ovr()}</b>　聲望 <b class="hl">${S.rep}</b><br>文學獎　參賽 ${S.litEntries} 次・得獎 ${S.litWins} 次${S.mhList.length?`<br>精神科病史　${S.mhList.join('、')}${S.crisis?`｜住院 ${S.crisis} 次`:''}`:''}`+
-    `${S.relLog.length?`<br>感情紀錄　${S.relLog.join('、')}${S.rel?`（${REL[S.rel.kind].n}中）`:''}`:'<br>感情紀錄　無'}${S.loveFails?`｜告白失敗 ${S.loveFails} 次`:''}</div>`+
+    `${S.relLog.length?`<br>感情紀錄　${S.relLog.map(r=>`${r.k}・${r.y} 年`).join('、')}${S.rel?`（${REL[S.rel.kind].n}中）`:''}`:'<br>感情紀錄　無'}${S.loveFails?`｜被拒 ${S.loveFails} 次`:''}</div>`+
     `<div style="margin-top:8px;font-size:12px;color:var(--dim);letter-spacing:.15em">已取得屬性</div><div>${tl}</div>`);
   gradChoice(); }
 
@@ -1317,11 +1324,12 @@ function career(reason){
 /* ================= 結算圖・分享・重播 ================= */
 function loveRows(){
   const PINK='#dd8fa4', RED='#dd7264', GREY='#948da6';
-  if(!S.relLog.length&&!S.loveFails)return [['§','大學情史'],['沒有談過戀愛','—',GREY]];
+  if(!S.relLog.length&&!S.loveFails)
+    return [['§','大學情史'],['沒有談過戀愛','—',GREY],['被拒次數','0 次',GREY]];
   const rows=[['§','大學情史']];
-  S.relLog.forEach(r=>{ const m=r.match(/^(.+?)（(.+)）$/);
-    rows.push([m?m[2]:r, m?m[1]:'', m&&/背叛|有毒/.test(m[1])?RED:PINK]); });
-  if(S.loveFails)rows.push(['告白失敗',S.loveFails+' 次',GREY]);
+  S.relLog.forEach(r=>rows.push([r.tag,`${r.k}・${r.y} 年`,/背叛|有毒/.test(r.k)?RED:PINK]));
+  rows.push(['交往年限',S.loveYears+' 年',PINK]);
+  rows.push(['被拒次數',S.loveFails+' 次',GREY]);
   rows.push(['最後狀態',S.rel?REL[S.rel.kind].n+'中':'單身',GREY]);
   return rows; }
 function endGame(tone,title,subs,rows){
@@ -1439,7 +1447,7 @@ function drawSummary(){
   y=H-40;
   c.strokeStyle=EDGE; c.beginPath(); c.moveTo(PAD,y-26); c.lineTo(W-PAD,y-26); c.stroke();
   T('seed '+SEED,PAD,y,14,DIM,MONO,500);
-  T('人文社科學生模擬器',W-PAD,y,14,DIM,SANS,500,'right');
+  T('wandanle.bearblog.dev',W-PAD,y,14,DIM,MONO,500,'right');
   return cv.toDataURL('image/png'); }
 
 /* ================= 開場 ================= */
