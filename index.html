@@ -263,7 +263,7 @@ function newState(name,org,year){
     stage:'HS',log:[],
     litEntries:0,litWins:0,stress:0,dep:null,mania:null,mhList:[],
     thesis:null,dualMajor:null,dest:null,
-    grade:0,lost:0,skipNext:false,lostYear:false,crisis:0,hsGov:false,weakPhd:false,
+    grade:0,lost:0,skipNext:false,lostYear:false,crisis:0,hsGov:false,weakPhd:false,msLevel:'none',slack:0,
     rel:null,relLog:[],loveGuaranteed:false,exes:0,loveFails:0,loveYears:0};
 }
 function abCost(k){ const cur=S.ab[k],pk=S.pot[k];
@@ -431,7 +431,7 @@ function e17(){
   const auto=!!S.O.camp;
   const sc=S.ab.th*0.4+S.ab.sp*0.3+S.ab.em*0.2+S.ab.po*0.1;
   const p=auto?100:clamp(25+(sc-30)*1.5,8,60);
-  choose('高二暑假・全國人文社會科學營',[
+  choose('升高二暑假・全國人文社會科學營',[
     {t:'報名人社營',main:true,s:auto?`${S.O.n}：保障錄取 100%`:`預估錄取率 ${p.toFixed(0)}%（基準 25%，看理論直覺與口才）`,
      f:()=>{
       if(chance(p)){
@@ -557,7 +557,14 @@ function u1(){
     {t:'泡在圖書館',s:'理論直覺 +5　實證努力 +3　政治 −2',f:()=>{
       card('good','總圖地下室',`你一個人啃完了那本沒人啃得完的書。沒有人知道，但你自己知道。<div class="statline">${bumps([['th',5],['em',3],['po',-2]])}</div>`); evJournal(); }},
     {t:'打工分擔家計',s:'行政 +6　實證努力 +2　信心 −2',f:()=>{
-      card('info','基本工資',`同學在討論傅科的時候，你在算今天的班表。你學會了效率，代價是那些聊天。<div class="statline">${bumps([['ad',6],['em',2],['cf',-2]])}</div>`); evJournal(); }},
+      card('info','基本工資',`同學在討論傅柯的時候，你在算今天的班表。你學會了效率，代價是你再也無法享受純粹的閒逸。<div class="statline">${bumps([['ad',6],['em',2],['cf',-2]])}</div>`); evJournal(); }},
+    {t:'什麼都不做',s:'實證努力 −5　行政 −3　信心 +2　壓力 −2',f:()=>{
+      S.stress=Math.max(0,S.stress-2); S.slack=(S.slack||0)+1;
+      card('','大一的空白',pick([
+        '你翹了三分之一的課，其餘時間在宿舍打電動、上網、睡到下午。<br>沒有人管你。這是你人生第一次感覺到絕對的自由。',
+        '你什麼都沒參加。系上的活動、讀書會、社團，你都在報名截止前一天想起來，想想還是算了。'])+
+        `<div class="statline">${bumps([['em',-5],['ad',-3],['cf',2]])}　壓力 <b class="up">−2</b> → ${S.stress}</div>`);
+      evJournal(); }},
     {t:'談一場戀愛',s:'理論直覺 +1　信心 +6　口才 +3　實證努力 −3　※直接進入關係，不會失敗',f:()=>{
       S.loveGuaranteed=true;
       card('good','大一的春天',`有人願意聽你講兩個小時你正在想的事。你第一次感覺到自己是被理解的。<div class="statline">${bumps([['th',1],['cf',6],['sp',3],['em',-3]])}</div>`); evJournal(); }},
@@ -576,6 +583,12 @@ function u2(){
       trait('both','方法論通才',`你在兩個讀書會之間跑來跑去，兩邊的人都覺得你不夠純粹。但你確實兩邊都聽得懂。<div class="statline">${bumps([['th',4],['em',4],['cf',2]])}</div>`); nx(); }},
     {t:'還沒想好',s:'信心 −2　保留彈性',f:()=>{
       card('','懸而未決',`你說你還在探索。有些人一輩子都在探索。<div class="statline">${bumps([['cf',-2]])}</div>`); nx(); }},
+    {t:'什麼都不做',s:'實證努力 −6　理論直覺 −2　壓力 −2　※不選學派',f:()=>{
+      S.stress=Math.max(0,S.stress-2); S.slack=(S.slack||0)+1;
+      card('','大二的空白',pick([
+        '讀書會你去了一次就沒再去，那本書你到現在還放在書架上。',
+        '白樹上開著杜鵑 白雲飄過窗前，你只能躺在床上看著螢幕咯咯笑，隱約感覺有點一年不如一年。'])+
+        `<div class="statline">${bumps([['em',-6],['th',-2]])}　壓力 <b class="up">−2</b> → ${S.stress}</div>`); nx(); }},
   ]); }
 function u3(){
   const opts=[];
@@ -587,7 +600,7 @@ function u3(){
   if(S.ab.po>=35)opts.push({t:'當教授的研究助理',s:'行政 +6　政治 +4　實證努力 +3　理論 −2',f:()=>{
     S.rep+=6; card('good','老師的 RA',`你負責核銷、排會議、催進度。你也因此看見了學術的後台——那裡沒有一句是在談論真理。<div class="statline">${bumps([['ad',6],['po',4],['em',3],['th',-2]])}</div><span class="hl">聲望 +6</span>`); evExchange(); }});
   opts.push({t:'什麼都不做，好好活著',s:'信心 +3　壓力 −1',f:()=>{
-    S.stress=Math.max(0,S.stress-1);
+    S.stress=Math.max(0,S.stress-1); S.slack=(S.slack||0)+1;
     card('','空白的一年',`你把大三拿來睡覺、看電影、跟朋友喝酒。多年後這是你唯一不後悔的一年。<div class="statline">${bumps([['cf',3]])}　壓力 <b class="up">−1</b> → ${S.stress}</div>`); evExchange(); }});
   choose('大三・機會與代價',opts); }
 
@@ -611,7 +624,7 @@ function govDestiny(){
 function evStudentGov(why){
   if(why){ const t={
       hs:['回到那間辦公室','高中那三年你就在做這件事。開學第二週，學長把你約去談，說今年需要一個人扛。<br><span style="color:var(--dim)">你說你要想一下。你們都知道你會答應。</span>'],
-      po:['沒有人問你要不要選','你只是幫忙處理了幾件事，然後名字就開始出現在別人的口中。到了連署階段，你已經沒有退路了。'],
+      po:['沒有人問你要不要選','你只是幫忙處理了幾件事，然後名字就開始出現在別人的口中。到了登記參選時，你已經沒有退路了。'],
       sp:['你的嘴巴替你報了名','系上座談會你講了五分鐘，隔天就有三個人來問你要不要選。你講話的時候，人們會停下來聽——這件事在這裡是一種資產。'],
     }[why];
     card('info',t[0],t[1]+`<div class="statline" style="opacity:.8">命定事件：${why==='hs'?'高中學生會經歷':(why==='po'?'政治是你的最強項':'口才是你的最強項')}${why==='hs'?'｜選情分數 <b class="hl">+6</b>（做過的人比較知道怎麼做）':''}</div>`); }
@@ -620,7 +633,7 @@ function evStudentGov(why){
   score:()=>S.ab.sp*0.4+S.ab.po*0.35+S.ab.cf*0.25+(S.hsGov?6:0), pivot:33, slope:1.8,
   great:()=>{ S.rep+=10;
     trait('presid','學生會長',`你是校園進步派的共主，你當選了，然後花一整年學會被自己人罵是什麼感覺。<div class="statline">${bumps([['po',8],['sp',6],['ad',5],['em',-4]])}<span class="hl">　聲望 +10</span></div>`); },
-  ok:()=>{ card('good','落選，回到學代會，繼續工作',`開票那晚你領先了整晚，可你漏算醫學院校區的選票，多年後這場難堪的逆轉還是會被提起，不過你確實喜歡這些事情。<div class="statline">${bumps([['po',3],['sp',3],['ad',2]])}</div>`); },
+  ok:()=>{ card('good','落選，回到學代會，繼續工作',`開票那晚你領先了整晚，可你漏算醫學院校區最後送來的選票，多年後這場難堪的逆轉還是會被提起，不過你確實喜歡這些事情。<div class="statline">${bumps([['po',3],['sp',3],['ad',2]])}</div>`); },
   fail:()=>{ card('bad','慘敗',`你的選票比廢票還要少。開票那晚有人安慰你說「大家只是不認識真正的你」，這句話比落選更難聽。<div class="statline">${bumps([['cf',-5],['po',1]])}</div>`); },
 },()=>nextStep()); }
 
@@ -652,7 +665,7 @@ function evNSC(){ tierEvent({
   score:()=>S.ab.th*0.35+S.ab.em*0.35+S.ab.po*0.2+S.ab.ad*0.1, pivot:46, slope:1.7, gbase:18,
   great:()=>{ S.rep+=20;
     trait('nsc','大專生國科會計畫主持人',`你的計畫不但過了，還拿到研究創作獎。指導教授在系上餐敘時特地提你的名字——你第一次感覺到，這條路上有人願意讓出一點位置給你。<div class="statline">${bumps([['th',5],['em',5],['ad',3],['po',3]])}<span class="hl">　聲望 +20</span></div>`); },
-  ok:()=>{ S.rep+=10; card('good','計畫通過',`四萬八千塊研究費，每個月六千塊。但那份核定通知你截圖存了很久。<div class="statline">${bumps([['em',4],['ad',3],['th',2]])}</div><span class="hl">聲望 +10</span>`); },
+  ok:()=>{ S.rep+=10; card('good','計畫通過',`四萬八千塊研究費，每個月六千塊。那份核定通知你截圖存了很久。<div class="statline">${bumps([['em',4],['ad',3],['th',2]])}</div><span class="hl">聲望 +10</span>`); },
   fail:()=>{ card('bad','未通過',`審查意見只有兩行：「研究問題不夠聚焦」。你至少學會了計畫書的格式，這東西以後你會寫一輩子。<div class="statline">${bumps([['ad',2],['cf',-3]])}</div>`); },
   skip:{t:'不申請',s:'需要指導教授點頭，也需要一整個暑假',f:()=>{
     card('','沒有申請',pick([
@@ -668,7 +681,7 @@ function u4(){
       if(sc>=56){ S.rep+=25; S.thesis='great';
         trait('honors','學士論文獎',`口試委員說：「這個題目你應該繼續做下去。」${det}<span class="hl">聲望 +25</span>`);
       }else if(sc>=42){ S.rep+=10; S.thesis='ok';
-        card('good','順利完成',`不是什麼驚天動地的作品，但每一節都是你自己親手寫的。這在這個年代已經不容易。${det}<span class="hl">聲望 +10</span>`);
+        card('good','順利完成',`不是什麼驚天動地的作品，但每一節都是你自己寫的。這在這個年代已經不容易。${det}<span class="hl">聲望 +10</span>`);
       }else{ S.thesis='bad';
         card('bad','低空飛過',`口試委員翻了翻，問了三個問題，你答不出兩個。他嘆了口氣，還是簽了名。${det}<div class="statline">${bumps([['cf',-5]])}</div>`);
       } nextStep(); }},
@@ -765,10 +778,10 @@ const REL={
 const AGEQ={
  young:{n:'年幼',d:['小你兩屆的那個人','剛升大一、比你小三歲的那個人','系上直屬學弟妹']},
  peer :{n:'同儕',d:['同班的那個人','隔壁系同屆的那個人','讀書會上坐你對面的那個人']},
- old  :{n:'年長',d:['大你三屆、已經在唸碩班的那個人','系上的兼任助理，大你五歲','在交友軟體上認識、已經出社會的那個人']},
+ old  :{n:'年長',d:['高你三屆、已經在唸碩班的那個人','系上的兼任助理，大你五歲','在交友軟體上認識、已經出社會的那個人']},
 };
 const FEELQ={
- like   :{n:'感興趣',d:'你確實被吸引——不是因為對方好看，是因為對方講話的方式讓你想一直聽下去。'},
+ like   :{n:'感興趣',d:'你確實被吸引——或許是因為對方的眼睛，或許是因為對方講話的方式讓你想一直聽下去。'},
  neutral:{n:'不討厭',d:'你對這個人沒有特別的感覺。不討厭，也不心動，只是剛好在同一個空間裡很久了。'},
  hate   :{n:'討厭',d:'你其實有點討厭這個人。討厭到你會在洗澡的時候反覆想起對方說過的話。'},
 };
@@ -872,7 +885,7 @@ function settleRomance(p,mode,boost){
     S.rel={kind:'burn',age:p.age,feel:p.feel,years:0,tag,li:S.relLog.length-1};
     card('gold','相愛相殺',
       '你們可以為了一個概念吵到凌晨三點，然後和好，然後再吵。<br>'+
-      '對方是唯一一個會直接說「你這段在鬼扯」的人，也是唯一一個真的讀完你寫的每一個字的人。<br>'+
+      '對方是唯一一個會直接說「你怎麼不去死」的人，也是唯一一個真的讀完你寫的每一個字，真正接住你的人。<br>'+
       '<span style="color:var(--dim)">你在這段關係裡變得更聰明，也變得更不確定自己值不值得被喜歡。</span>'+
       `<div class="statline">${bumps([['th',6],['sp',5],['cf',-4]])}｜${tag}</div>`);
     nextStep(); return; }
@@ -925,7 +938,7 @@ function relationshipTick(){
       card('info','燒完了',`最後一次吵架沒有結論，只是兩個人都累了。<br>你留下了那些被逼出來的想法，也留下了那個「我是不是很難相處」的問題。<div class="statline">${bumps([['th',3],['cf',-2]])}</div>`);
     }else{
       card('gold','還在燒',pick([
-        '對方把你的草稿改到滿江紅，你氣了三天，然後承認每一條都對。',
+        '對方說你寫的東西是垃圾，你氣了三天，然後不得不承認每一條都對。',
         '你們又為了一個引註吵起來。凌晨四點，你發現自己在笑。'])+
         `<div class="statline">${bumps([['th',5],['sp',3],['cf',-4]])}</div>`);
     }
@@ -970,7 +983,8 @@ function hospitalize(){
     (dcf?`　信心 <b class="up">+${dcf}</b>（治療穩定）`:'')+
     `<br>壓力歸零｜<b class="hl">下一年休學，完全停止累積</b></div>`);
   choose('',[{t:'▸ 明年見',main:true,f:()=>endYear()}]); }
-function badEnding(){
+
+  function badEnding(){
   board(2); divider('結局');
   const rows=KEYS.map(k=>`${ABL[k]} <b>${S.ab[k]}</b>`).join('　');
   card('bad','壞結局・人社系484有毒',
@@ -1016,19 +1030,16 @@ function gradChoice(){
   choose('畢業去向',[
     {t:'推甄碩士班',main:true,s:`錄取率 <b>${m.p}%</b>（理論 30%／實證 30%／政治 20%／行政 10%＋聲望＋論文 ${S.thesis==='great'?'+8':S.thesis==='ok'?'+3':S.thesis==='none'?'−8':'0'}）｜落榜則進入職場`,
      f:()=>{ if(chance(m.p)){
-        card('gold','推甄上了',`備審資料七十頁，面試十五分鐘。放榜那天你反覆重新整理了四十次頁面。<br>你還不知道，真正的篩選現在才開始。`);
+        card('gold','推甄上了',`備審資料二十頁，面試十五分鐘。放榜那天你反覆重新整理了四十次頁面。<br>你還不知道，真正的篩選現在才開始。`);
         masterProgram(); }
       else{ card('bad','落榜',`正取六名、備取三名，沒有你。有人跟你說「再考一年就好」，但你算了一下家裡還能撐多久。<div class="statline">${bumps([['cf',-6]])}</div>`);
         career('碩士落榜'); } }},
-    {t:'直攻博士班',s:ok?'預備研究生資格審查｜學術路線的極端解':'需要 理論直覺 ≥55、聲望 ≥45，且有優等論文或國科會計畫',dis:!ok,
+    {t:'直攻博士班',s:ok?'預備研究生資格審查｜學術路線的極端解':'需要 理論直覺 ≥55、聲望 ≥45，且有學士論文獎或國科會計畫',dis:!ok,
      f:()=>{ card('gold','直攻博士',`老師說：「你要想清楚，這是十年的事。」你說你想清楚了。你當然沒有。`);
         phdChoice(true); }},
     {t:'投入職場',warn:true,s:'進入結局｜依 理論直覺・信心・政治・行政 判定',
      f:()=>career('主動求職')},
   ]); }
-function toBeContinued(where){
-  card('info','待續',`你進入了 ${where}。<br>指導教授的選擇、國科會計畫、期刊審查、研討會的政治、兼任講師的鐘點費、六年條款——<br><span style="color:var(--dim)">下一版本：23 → 45 歲。</span>`);
-  choose('',[{t:'↺ 換一個人生',main:true,f:()=>restart()}]); }
 
 /* 少年股神：直覺夠高、行政與實證都不能太高；躁鬱症大幅放寬門檻 */
 function stockGod(){
@@ -1043,7 +1054,7 @@ function msDropRisk(){
 function masterProgram(){
   const drop=msDropRisk(), sc=msThesisScore();
   card('info','碩士班',
-    `修業兩年，寫論文三年。你開始知道那些掛在研究室門口的名字是怎麼來的。<br>`+
+    `修業兩年，寫論文三年。你開始知道那些掛在研究室門口，沒見過人的名字是怎麼來的。<br>`+
     `<span style="color:var(--dim)">碩士班不篩選聰明，它篩選的是「能不能把一件沒有人在乎的事做完」。</span>`+
     `<div class="statline">退學風險 <b class="dn">${drop}%</b>　（信心・行政・精神狀態・壓力）<br>`+
     `論文分數 <b class="hl">${sc.toFixed(1)}</b>　理論 35%・實證 35%・信心 15%・行政 10%・政治 5%<br>`+
@@ -1053,6 +1064,7 @@ function masterProgram(){
     else if(sc>=58)msGreat();
     else msMediocre(); }}]); }
 function msDropout(){
+  S.msLevel='drop';
   const a=bump('ad',4), c=bump('cf',-16);
   card('bad','碩士退學',
     `第三年你已經很久沒有進研究室了。指導教授最後一次寄信給你，你連開都沒有開。<br>`+
@@ -1061,6 +1073,7 @@ function msDropout(){
     `<div class="statline">行政 <b class="up">+${a}</b>（你至少學會了怎麼跑流程）　信心 <b class="dn">${c}</b></div>`);
   choose('',[{t:'▸ 進入職場',main:true,f:()=>career('碩士退學')}]); }
 function msMediocre(){
+  S.msLevel='ok';
   card('info','平庸論文',
     `你交出去了。口試委員問的問題都很客氣，客氣到你知道他們沒有很認真讀。<br>`+
     `<span style="color:var(--dim)">你曾經幻想能夠創造些什麼屬於你的東西，但現在的你只求順利畢業。</span>`+
@@ -1077,6 +1090,7 @@ function msMediocre(){
        academicCareer('local'); }},
   ]); }
 function msGreat(){
+  S.msLevel='great';
   card('gold','優秀論文',
     `口試那天有兩個委員為了你的第三章的立論吵了起來，而你發現自己有能力回答他們兩個人。<br>`+
     `會後有人問你要不要把它改寫成專書。<br>`+
@@ -1121,9 +1135,16 @@ function academicCareer(kind){
   let grants=0; for(let i=0;i<YEARS;i++)if(chance(gp))grants++;
   /* 計畫是研究的燃料：決定產出係數，也小幅提升品質 */
   const fund=grants/YEARS, mult=0.58+0.72*fund;
+  /* --- 研討會論文：政治主導、理論次之、行政再次、實證最輕 --- */
+  const nConf=Math.max(0,Math.round((1.5+a.po*0.20+a.th*0.09+a.ad*0.06+a.em*0.04)*mult*(tenured?1:0.55)));
+  /* 國際比例：本土博士的場子多半在國內，海外博士反過來 */
+  const intlShare=clamp(0.04+a.po/700+fund*0.14+(kind==='overseas'?0.26:-0.02),0.03,0.62);
+  const confI=Math.round(nConf*intlShare), confD=nConf-confI;
   /* --- 產出總量 --- */
-  const nPapers=Math.max(1,Math.round((4+a.em*0.22+a.po*0.08+a.ad*0.04)*mult*(tenured?1:0.5)));
-  const nBooks =Math.max(0,Math.round((0.6+a.th*0.032+a.em*0.018)*mult*(tenured?1:0.5)));
+  let nPapers=Math.max(1,Math.round((4+a.em*0.22+a.po*0.08+a.ad*0.04)*mult*(tenured?1:0.5)));
+  let nBooks =Math.max(0,Math.round((0.6+a.th*0.032+a.em*0.018)*mult*(tenured?1:0.5)));
+  /* 一年就那麼多時間：跑場子跑得多，寫出來的就少 */
+  const confDrag=clamp(1-Math.max(0,(nConf/Math.max(1,nPapers))-0.85)*0.28,0.55,1);
   /* --- 分級規則 --- */
   const landmarkOK = a.th>=80&&a.po<=60;
   const influOK    = (a.th>=70&&a.em>=60)||a.po>=70;
@@ -1139,6 +1160,9 @@ function academicCareer(kind){
       if(chance(pIgnor)){ r.ign++; continue; }
       r.mid++; }
     return r; }
+  /* 套用研討會排擠效應 */
+  nPapers=Math.max(1,Math.round(nPapers*confDrag));
+  nBooks =Math.max(0,Math.round(nBooks*clamp(confDrag+0.10,0.6,1)));
   const B=grade(nBooks,70), P=grade(nPapers,16);
   /* 劃時代名額沒用完的，補在專書上（經典多半是書） */
   while(landmarkLeft>0&&B.mid>0){ B.mid--; B.land++; landmarkLeft--; }
@@ -1180,21 +1204,38 @@ function academicCareer(kind){
     row('　平庸無奇',P.mid+' 篇','var(--dim)')+
     row('　乏人問津',P.ign+' 篇','var(--dim)')+
     `<div style="margin-top:6px"></div>`+
+    `<div style="margin-top:6px;color:var(--dim);font-size:11.5px;letter-spacing:.15em">研討會論文 ${nConf} 篇</div>`+
+    row('　國際研討會',confI+' 篇')+
+    row('　國內研討會',confD+' 篇','var(--dim)')+
+    `<div style="margin-top:6px"></div>`+
     row('優良教師',teach+' 次')+
     row('系主任',chair?chair+' 年':'沒有當過')+
     `</div>`);
   board(2);
-  academicCoda(kind,job,tenured,B,P,grants,teach,chair,mult,repUp,nBooks,nPapers,luck); }
+  academicCoda(kind,job,tenured,B,P,grants,teach,chair,mult,repUp,nBooks,nPapers,luck,nConf,confI,confD,confDrag); }
 
-function academicCoda(kind,job,tenured,B,P,grants,teach,chair,mult,repUp,nBooks,nPapers,luck){
+function academicCoda(kind,job,tenured,B,P,grants,teach,chair,mult,repUp,nBooks,nPapers,luck,nConf,confI,confD,confDrag){
   const land=B.land+P.land, infl=B.infl+P.infl, ign=B.ign+P.ign;
   let title,body;
-  if(land>=3){ title='學派';
+  if(land>=2&&chair>=6){ title='學科台柱';
+    body='你的名字變成了一種形容詞，而系上的每一份預算表也都有你的簽名。<br>'+
+      '你既寫得出讓人反覆引用的東西，也守得住一個系的存續——這兩件事很少長在同一個人身上。<br>'+
+      '<span style="color:var(--dim)">退休那天有人說，沒有你就沒有這個系。你知道那句話的另一半意思是，這個系從此要自己走下去了。</span>'; }
+  else if(land>=3){ title='學派';
     body='你的名字變成了一種形容詞。研究生在報告裡寫「某某式的讀法」，指的是你。<br>'+
       '你活著看到自己的東西進了教科書——這件事發生的時候，你正在為了一份核銷單跟會計室吵架。'; }
   else if(land>=1){ title='那一本書';
     body='你寫過一本大家都會引用的書。之後的二十年，每一次自我介紹都會被提到它。<br>'+
       '<span style="color:var(--dim)">你後來寫的東西沒有一本超過它。你不確定那是因為你退步了，還是因為那本書把你用完了。</span>'; }
+  else if(tenured&&S.ab.sp>=65&&(nBooks+nPapers)<=22&&teach>=6){ title='網紅教授';
+    body='你的一場演講在網路上被看了兩百萬次。有高中生寫信給你，說是因為你才決定要讀這個系。<br>'+
+      '系上有些耳語你當然聽過——說你把學問講得太簡單，說你的書單十年沒換過，說你上一篇期刊論文是哪一年的事。<br>'+
+      '你不太在意。你相信這個學科需要有人去引入活水，而那個人剛好是你。<br>'+
+      '<span style="color:var(--dim)">你的行程表排到明年。你確實已經很久沒有坐下來寫完一篇東西了。</span>'; }
+  else if(nConf>=26&&S.ab.po>=65&&nConf>=nPapers*1.2&&(B.infl+P.infl)<=4){ title='研討會動物';
+    body='你的履歷上，研討會那一欄比期刊那一欄長。<br>'+
+      '你認識每一個人，每一個人也都認識你。你在茶敘時間促成的合作案比你寫過的論文還多。<br>'+
+      '<span style="color:var(--dim)">那些發表過的東西後來有沒有變成什麼，沒有人追問過。</span>'; }
   else if(chair>=6){ title='行政人生';
     body='你把最好的十年給了會議、評鑑、招生和系務。系上因為你而運作良好。<br>'+
       '<span style="color:var(--dim)">退休演講上，同事說你是系上的支柱。沒有人提到你的研究。</span>'; }
@@ -1233,6 +1274,9 @@ function academicCoda(kind,job,tenured,B,P,grants,teach,chair,mult,repUp,nBooks,
     ['有影響力',P.infl+' 篇'],
     ['平庸無奇',P.mid+' 篇','#948da6'],
     ['乏人問津',P.ign+' 篇','#948da6'],
+    ['§','研討會論文　'+nConf+' 篇'],
+    ['國際研討會',confI+' 篇'],
+    ['國內研討會',confD+' 篇','#948da6'],
     ['§','教學與行政'],
     ['優良教師',teach+' 次'],['系主任',chair?chair+' 年':'沒有當過'],
     ['§','出身與紀錄'],
@@ -1242,8 +1286,18 @@ function academicCoda(kind,job,tenured,B,P,grants,teach,chair,mult,repUp,nBooks,
     ...loveRows(),
   ]); }
 
+function msBonus(){ return {none:0,drop:2,ok:7,great:11}[S.msLevel]||0; }
+function DEGN(){ return {none:'學士',drop:'碩士肄業',ok:'碩士（平庸論文）',great:'碩士（優秀論文）'}[S.msLevel]; }
+function musicianRoll(){
+  if(S.ab.th<=50)return false;
+  let p=7;
+  if(S.org==='art')p+=10;
+  if(S.traits.prodigy||S.litWins>0)p+=5;
+  if(S.traits.bipolar)p+=5;
+  return chance(p); }
 function career(reason){
-  const sc=S.ab.th*0.35+S.ab.cf*0.30+S.ab.po*0.20+S.ab.ad*0.15;
+  const raw=S.ab.th*0.35+S.ab.cf*0.30+S.ab.po*0.20+S.ab.ad*0.15;
+  const mb=msBonus(), sc=raw+mb;
   const cand=[['th',S.ab.th],['cf',S.ab.cf],['po',S.ab.po],['ad',S.ab.ad]].sort((a,b)=>b[1]-a[1]);
   const dom=cand[0][0];
   let band=sc>=50?0:sc>=38?1:2;
@@ -1252,7 +1306,7 @@ function career(reason){
       cf:['自媒體創作者','你開了一個談社會議題的頻道。第八個月開始有業配，第二年你辭掉了正職。<br>你把人社訓練變成了說故事的能力，系上老師不太理解，但你的訂閱者理解。'],
       po:['政治幕僚','你進了立委辦公室當助理，三年後成為辦公室主任。<br>你寫的新聞稿上不會有你的名字，但那些法案的第三條第二項是你熬夜改出來的。'],
       ad:['高考文官','你考上高考三級，分發到部裡。<br>同事說你是他們見過最會寫公文的人。你偶爾會想起大學讀過的那些理論，然後繼續處理下一個案子。']},
-   1:{th:['補教業講師','你在補習班教學測國文與社會，講得比誰都好。<br>學生說你上課會講到福柯，你笑說那是職業病。你也確實沒有那麼想離開這裡。'],
+   1:{th:['補教業講師','你在補習班教學測國文與社會，講得比誰都好。<br>學生說你上課會扯到傅柯，你笑說那是職業病。你也確實沒有那麼想離開那裡。'],
       cf:['企業行銷企劃','你進了一間中型企業做品牌企劃。面試官說「人社背景的比較會講故事」。<br>你確實會。只是你偶爾會想，講故事是不是本來該用在別的地方。'],
       po:['NGO 倡議工作者','你進了一個議題型 NGO，薪水三萬八，一個人做三個人的事。<br>你很累，但你知道自己在做的是對的事情——這句話你會反覆說很多年。'],
       ad:['大學系辦助理','你在母校的系辦上班，處理招生、排課、核銷。<br>你認識每一個教授，也看得懂每一次系務會議的暗流。你就在那條路旁邊，站了很久。']},
@@ -1263,7 +1317,22 @@ function career(reason){
   };
   /* --- 專屬結局判定，優先於一般分帶 --- */
   let special=null, rule='';
-  if(S.org==='cap'){
+  if(musicianRoll()){
+    if(S.org==='art'){
+      special=['藝文工作者',
+        `家裡本來就有樂器，也本來就有人聽你彈。你要做這件事，在你家從來不需要解釋。<br>`+
+        `你知道有人說你是靠家裡。你也知道那句話有一半是真的。<br>`+
+        `但某一場唱到一半的時候，你想起李雙澤唱的「我用你的破鼓，但不唱你的歌」。<br>`+
+        `<span style="color:var(--dim)">鼓是誰的，你沒有辦法選。要唱什麼，是你自己的事。</span>`];
+      rule=`文藝家傳・藝文工作者｜理論直覺 ${S.ab.th} > 50，出身加成 +10%`;
+    }else{
+      special=['藝文工作者',
+        `你組了團。大三那年在地下的場子演出過幾次，畢業後你們發了一張沒有人聽過的 EP。<br>`+
+        `你白天上班晚上練團，週末載著音箱跑南部。三十歲那年有一首歌突然被演算法選中，五年後又沒有人記得。<br>`+
+        `<span style="color:var(--dim)">你寫的詞裡有整個大學讀過的東西，只是沒有人會用那種方式聽出來。<br>`+
+        `這條路沒有升等、沒有評鑑，也沒有人可以怪。</span>`];
+      rule=`藝文工作者｜理論直覺 ${S.ab.th} > 50 的低機率分支`; }
+  }else if(S.org==='cap'){
     if(Math.max(S.ab.ad,S.ab.em)>=45){
       special=['繼承家業',
         `你沒有投履歷。畢業那年夏天你回家，開始跟著看帳、跑工廠、認識那些叫你「小少爺」卻比你懂事的老員工。<br>`+
@@ -1282,6 +1351,26 @@ function career(reason){
     }else{
       band=0; rule='資本之家：不會落到那四種結局以外';
     }
+  }else if(S.ab.em>=60&&S.ab.em>=cand[0][1]+8){
+    /* 實證努力在職場上唯一有效的地方 */
+    const hasMS=(S.msLevel==='ok'||S.msLevel==='great');
+    if(hasMS){
+      special=['研究助理',
+        `你成為專任研究助理。月薪41500，有勞健保，辦公室在系館四樓最裡面那間。<br>`+
+        `你很快發現，一天裡真正花在研究上的時間不到兩小時。<br>`+
+        `其餘的時間你在核銷、跑採購、追廠商的統一發票、填計畫變更申請、訂便當、借場地、做海報、發公告`+
+        `把成果報告改成科技部規定的格式。<br>`+
+        `<span style="color:var(--dim)">你的碩士學位在這裡最大的用途，是讓你有資格做這些事。<br>`+
+        `計畫兩年一期。每兩年你會重新煩惱一次同樣的問題。</span>`];
+      rule=`研究助理｜實證努力 ${S.ab.em} 明顯高於其他能力　＋碩士學位`;
+    }else{
+      special=['兼任研究助理',
+        `你在一個計畫底下當兼任助理，時薪基本工資多一點，一個月排四十小時。<br>`+
+        `做的事情跟研究確實有關：找資料、跑統計、整理逐字稿、把訪談檔案一個一個重新命名。<br>`+
+        `你去問過有沒有專任的缺。對方說得很客氣：<br>`+
+        `<span style="color:var(--dim)">「現在專任助理都要碩士了。你要不要先去考個研究所？」<br>`+
+        `你點頭說好，回家算了一下學費和兩年的機會成本，然後沒有再去想這件事。</span>`];
+      rule=`兼任研究助理｜實證努力 ${S.ab.em} 明顯高於其他能力　無碩士學位`; }
   }else if(stockGod()){
     const bip=!!S.traits.bipolar;
     special=['少年股神',
@@ -1298,9 +1387,17 @@ function career(reason){
   }
   const [title,body]=special||E[band][dom];
   const rows=KEYS.map(k=>`${ABL[k]} <b>${S.ab[k]}</b>`).join('　');
-  card(special||band===0?'gold':band===1?'good':'bad','結局・'+title,
-    `${body}<div class="statline">${reason}｜職涯判定分數 <b class="hl">${sc.toFixed(1)}</b>${rule?`<br><span class="hl">${rule}</span>`:''}<br>理論直覺 ${S.ab.th}×0.35　信心 ${S.ab.cf}×0.30　政治 ${S.ab.po}×0.20　行政 ${S.ab.ad}×0.15<br>${rows}</div>`);
-  const coda = special&&title==='少年股神' ? '你偶爾會夢見大學那間研究室。醒來之後開盤了。'
+  const tone=title==='兼任研究助理'?'bad':title==='研究助理'?'info':(special||band===0?'gold':band===1?'good':'bad');
+  card(tone,'結局・'+title,
+    `${body}<div class="statline">${reason}｜職涯判定分數 <b class="hl">${sc.toFixed(1)}</b>${rule?`<br><span class="hl">${rule}</span>`:''}<br>`+
+    `理論直覺 ${S.ab.th}×0.35　信心 ${S.ab.cf}×0.30　政治 ${S.ab.po}×0.20　行政 ${S.ab.ad}×0.15　=　${raw.toFixed(1)}<br>`+
+    `${mb?`學位加成 <b class="hl">+${mb}</b>（${DEGN()}）　`:`學位 ${DEGN()}　`}<span style="opacity:.7">50 / 38 為分水嶺</span><br>${rows}</div>`);
+  const coda = special&&title==='藝文工作者'&&S.org==='art' ? '很多年後有個大學生在訪談裡說，是聽你的歌才決定讀人社的。你不知道該高興還是道歉。'
+    : special&&title==='藝文工作者' ? '同學會上有人提了你的作品。你說那是很久以前寫的了。'
+    : S.slack>=3 ? '大學那四年你幾乎沒有留下任何東西。你偶爾會懷疑那四年到底發生過沒有。'
+    : special&&title==='研究助理' ? '有人問你在做什麼研究。你想了一下，說「幫老師做一些事」。'
+    : special&&title==='兼任研究助理' ? '你認識的每一個人都說你很認真。這句話你已經聽了很多年。'
+    : special&&title==='少年股神' ? '你偶爾會夢見大學那間研究室。醒來之後開盤了。'
     : special&&title==='繼承家業' ? '同學會上大家問你在做什麼，你說「家裡的事」。話題就停在那裡了。'
     : special&&title==='享受人生' ? '有人說你浪費了那顆腦袋。你想反駁，但你想不出要拿它去換什麼。'
     : S.traits.prodigy&&band===2 ? '十六歲那年你得過全國文學獎。這件事現在沒有人記得，包括你自己也很少想起。'
@@ -1309,13 +1406,16 @@ function career(reason){
     : band===0 ? '你偶爾會夢見系學會的燈。醒來之後照常上班。'
     : '學術這條路你沒有走。多年後你會發現，走了的人也未必比較快樂。';
   card('info','後來',coda);
-  endGame(special||band===0?'gold':band===1?'good':'bad',title,[reason,rule||`職涯判定分數 ${sc.toFixed(1)}`],[
+  endGame(tone==='info'?'good':tone,title,[reason,rule||`職涯判定分數 ${sc.toFixed(1)}`],[
     ['§','職涯判定'],
-    ['判定分數',sc.toFixed(1)],['出身',S.O.n],['學校',TIERS[S.tier].n],
+    ['判定分數',sc.toFixed(1)],
+    ['學位',DEGN()],
+    ...(mb?[['學位加成','+'+mb,'#948da6']]:[]),
+    ['出身',S.O.n],['學校',TIERS[S.tier].n],
     ['綜合評價',ovr()],['聲望',S.rep],
     ['§','大學紀錄'],
     ['文學獎',`參賽 ${S.litEntries}・得獎 ${S.litWins}`],
-    ['畢業論文',{great:'優等',ok:'完成',bad:'低空飛過',none:'沒有寫'}[S.thesis]||'—'],
+    ['畢業論文',{great:'學士論文獎',ok:'完成',bad:'低空飛過',none:'沒有寫'}[S.thesis]||'—'],
     ['精神科病史',S.mhList.join('、')||'無'],
     ['取得屬性',S.traitList.length?S.traitList.join('・'):'無'],
     ...loveRows(),
