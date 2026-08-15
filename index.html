@@ -1293,7 +1293,7 @@ function DEGN(){ return {none:'學士',drop:'碩士肄業',ok:'碩士（平庸�
 function musicianRoll(){
   if(S.ab.th<=50)return false;
   let p=7;
-  if(S.org==='art')p+=10;
+  if(S.org==='art')p+=17;
   if(S.traits.prodigy||S.litWins>0)p+=5;
   if(S.traits.bipolar)p+=5;
   return chance(p); }
