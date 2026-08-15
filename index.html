@@ -581,8 +581,8 @@ function u2(){
       trait('empiric','實證派',`你決定相信：沒有資料的話，都只是空話。<div class="statline">${bumps([['em',7],['th',-3]])}<br>實證努力 潛力上限 <b class="up">+6</b> → ${S.pot.em}</div>`); nx(); }},
     {t:'兩邊都要',s:both?'理論 +4　實證 +4　信心 +2':'需要 理論直覺 ≥45 且 實證努力 ≥45',dis:!both,f:()=>{
       trait('both','方法論通才',`你在兩個讀書會之間跑來跑去，兩邊的人都覺得你不夠純粹。但你確實兩邊都聽得懂。<div class="statline">${bumps([['th',4],['em',4],['cf',2]])}</div>`); nx(); }},
-    {t:'還沒想好',s:'信心 −2　保留彈性',f:()=>{
-      card('','懸而未決',`你說你還在探索。有些人一輩子都在探索。<div class="statline">${bumps([['cf',-2]])}</div>`); nx(); }},
+    {t:'兩邊都聽，還沒想好',s:'信心 −2　保留彈性',f:()=>{
+      card('','懸而未決',`你說你還在探索。有些人一輩子都在探索。<div class="statline">${bumps([['th',1],['em',1],['cf',-2]])}</div>`); nx(); }},
     {t:'什麼都不做',s:'實證努力 −6　理論直覺 −2　壓力 −2　※不選學派',f:()=>{
       S.stress=Math.max(0,S.stress-2); S.slack=(S.slack||0)+1;
       card('','大二的空白',pick([
@@ -997,6 +997,7 @@ function hospitalize(){
     `卻還是得說謊”<br>`+
     `<div class="statline">${S.O.n}出身・${S.tier?TIERS[S.tier].n:'高中'}・${S.age} 歲離開<br>${rows}<br>`+
     `精神科病史　${S.mhList.join('、')||'無'}｜住院 ${S.crisis} 次</div>`);
+  if(S.slack>=3)card('','',`<span style="color:var(--dim);font-size:12.5px">你在這裡的四年幾乎沒有留下任何東西。連要恨誰都找不到對象。</span>`);
   card('info','',`<span style="color:var(--dim);font-size:12.5px">這是人們眼中最壞的一種結局，但你相信，自找的苦痛比不請自來的更有尊嚴。`);
   endGame('bad','人社系484有毒',[`${S.age} 歲離開學校`,'沒有人會為這件事負責'],[
     ['§','紀錄'],
@@ -1250,7 +1251,8 @@ function academicCoda(kind,job,tenured,B,P,grants,teach,chair,mult,repUp,nBooks,
   else { title='一份工作';
     body='你按時上下班，論文按時產出，課按時教完。三十年就這樣過去了。<br>'+
       '<span style="color:var(--dim)">你偶爾會想起大學那年在總圖地下室啃完那本書的自己。那個人以為前面有別的東西。</span>'; }
-  const extra = S.traits.bipolar?'<br><br><span style="color:var(--dim)">你的產出一直是一陣一陣的。系上的人習慣了，說你是「有靈感型的」。</span>'
+  const extra = S.slack>=3?'<br><br><span style="color:var(--dim)">大學那四年你幾乎什麼都沒做。後來每次有學生問你怎麼走到這裡的，你都答不太出來。</span>'
+    : S.traits.bipolar?'<br><br><span style="color:var(--dim)">你的產出一直是一陣一陣的。系上的人習慣了，說你是「有靈感型的」。</span>'
     : S.dep?'<br><br><span style="color:var(--dim)">那件事你從來沒有真的處理過。它跟著你進了研究室，也跟著你退休。</span>'
     : S.traits.adhd?'<br><br><span style="color:var(--dim)">你到六十歲還是會在系務會議上走神。你已經不再為此感到抱歉了。</span>':'';
   card(land>=1?'gold':tenured?'info':'bad','結局・'+title,body+extra+
