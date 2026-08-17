@@ -13,9 +13,10 @@
   --bg:#141319; --panel:#1c1b24; --panel2:#262430; --edge:#37334a;
   --paper:#e9e2d1; --dim:#948da6; --brass:#d4a24c; --seal:#c2452f;
   --good:#8fc79f; --bad:#dd7264; --blue:#84a9d6;
-  --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
-  --sans:'Noto Sans TC',-apple-system,'PingFang TC','Microsoft JhengHei',sans-serif;
-  --serif:'Noto Serif TC','Songti TC',serif;
+  /* 拉丁與數字用等寬，中文一律回到 Noto Sans TC，避免中文掉進系統預設等寬字 */
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,'Noto Sans TC','PingFang TC','Heiti TC','Microsoft JhengHei','Noto Sans CJK TC',monospace;
+  --sans:'Noto Sans TC',-apple-system,'PingFang TC','Heiti TC','Microsoft JhengHei','Noto Sans CJK TC',sans-serif;
+  --serif:'Noto Serif TC','Songti TC','PingFang TC','Microsoft JhengHei',serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
@@ -55,6 +56,7 @@ body{background:var(--bg);color:var(--paper);font-family:var(--sans);font-size:1
 .card h4::before{content:'';width:9px;height:9px;background:var(--seal);border-radius:1px;flex:none}
 .card.gold h4::before{background:var(--brass)} .card.bad h4::before{background:var(--bad)}
 .card.good h4::before{background:var(--good)} .card.info h4::before{background:var(--blue)}
+.card.satire h4::before{background:#c77fd0}
 .card p{font-size:14px} .card p+p{margin-top:4px}
 .up{color:var(--good);font-weight:700}.dn{color:var(--bad);font-weight:700}.hl{color:var(--brass);font-weight:700}
 .statline{font-family:var(--mono);font-size:12.5px;color:var(--paper);background:#100f15;border:1px dashed var(--edge);
@@ -133,6 +135,36 @@ body{background:var(--bg);color:var(--paper);font-family:var(--sans);font-size:1
 .odd .op{width:38px;text-align:right;font-family:var(--mono);font-size:12px;color:var(--dim);flex:none}
 .oddsnote{font-size:11.5px;color:var(--dim);margin-top:8px;letter-spacing:.04em}
 .oddsnote a{color:var(--blue);margin-left:6px}
+/* ---- 成就牆：走過的印成紙，沒走過的是空白 ---- */
+#ach-wall{margin-top:4px}
+#ach-head{display:flex;justify-content:space-between;align-items:baseline;
+  padding-bottom:9px;border-bottom:1px solid var(--edge)}
+#ach-head span{font-family:var(--serif);font-size:14px;font-weight:600;letter-spacing:.22em;color:var(--paper)}
+#ach-head b{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--brass)}
+#ach-head i{font-style:normal;font-size:11.5px;color:var(--dim);letter-spacing:.08em;margin-left:8px}
+#ach-bar{margin-top:24px;padding-top:15px;border-top:1px solid var(--edge);
+  display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+#ach-bar span{font-family:var(--serif);font-size:13.5px;font-weight:600;letter-spacing:.22em;color:var(--paper)}
+#ach-bar b{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--brass)}
+#ach-panel{display:none;margin-top:12px}
+#ach-panel.open{display:block}
+.ach-grp{font-size:10.5px;color:var(--dim);letter-spacing:.28em;margin:15px 0 7px}
+.ach-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:4px}
+.ach-cell{position:relative;min-height:58px;display:flex;align-items:center;justify-content:center;
+  text-align:center;padding:6px 4px;border:0;border-radius:0;
+  font-family:var(--sans);font-size:11.5px;font-weight:700;line-height:1.4;letter-spacing:.02em;
+  background:#131218;color:#3f3a4d;cursor:pointer;overflow:hidden;word-break:break-all}
+.ach-cell.on{background:var(--paper);color:#16141b}
+.ach-cell.sel{outline:2px solid var(--paper);outline-offset:-2px}
+.ach-cell.on.sel{outline-color:#16141b}
+.ach-cell.new::after{content:'';position:absolute;top:0;right:0;
+  border-top:11px solid #16141b;border-left:11px solid transparent}
+.ach-cell:active{opacity:.75}
+.ach-detail{margin-top:12px;padding:11px 13px;background:#100f15;border:1px dashed var(--edge);
+  border-radius:4px;font-size:13.5px;color:var(--dim);line-height:1.8;min-height:52px}
+.ach-detail b{display:block;font-family:var(--serif);font-weight:600;font-size:16px;
+  letter-spacing:.06em;color:var(--paper);margin-bottom:3px}
+.ach-reset{margin-top:12px;font-size:11.5px;color:#5b5470;text-decoration:underline;cursor:pointer}
 #byline{margin-top:26px;padding-top:16px;border-top:1px solid var(--edge);
   font-size:12px;color:#6f6883;letter-spacing:.06em}
 #byline a{color:var(--dim);text-decoration:none;border-bottom:1px solid #4a4360;
@@ -172,6 +204,8 @@ body{background:var(--bg);color:var(--paper);font-family:var(--sans);font-size:1
     <p class="seedline">命運種子
       <input id="seed-show" maxlength="24" style="width:110px;background:#100f15;color:var(--brass);border:1px solid var(--edge);border-radius:4px;padding:2px 6px;font-family:inherit;font-size:12px;text-align:center">
       · <a href="#" id="seed-re" style="color:var(--blue)">換一個</a><br>相同種子＋相同選擇＝相同人生</p>
+    <div id="ach-bar"><span>成就</span><b id="ach-count">0 / 0</b></div>
+    <div id="ach-panel"></div>
     <p id="byline">by <a href="https://wandanle.bearblog.dev/" target="_blank" rel="noopener">wandanle</a>　·　在作者的網誌閱讀無關的文章</p>
   </div>
 </div>
@@ -1245,7 +1279,7 @@ function academicCoda(kind,job,tenured,B,P,grants,teach,chair,mult,repUp,nBooks,
   else if(!tenured){ title='流浪';
     body='你到現在還在教通識。學生很喜歡你，每學期的評鑑都很高分。<br>'+
       '<span style="color:var(--dim)">你六十歲那年還在投履歷。你已經不太記得當初想研究的是什麼問題了。</span>'; }
-  else if(ign>=P.mid+B.mid){ title='沒有人讀';
+  else if(ign>=(nBooks+nPapers)*0.4){ title='沒有人讀';
     body='你發表了很多東西。你可以確定的是，其中大部分沒有第二個人從頭讀到尾。<br>'+
       '<span style="color:var(--dim)">但升等需要，評鑑需要，系上的排名需要。所以你繼續寫。</span>'; }
   else { title='一份工作';
@@ -1255,10 +1289,16 @@ function academicCoda(kind,job,tenured,B,P,grants,teach,chair,mult,repUp,nBooks,
     : S.traits.bipolar?'<br><br><span style="color:var(--dim)">你的產出一直是一陣一陣的。系上的人習慣了，說你是「有靈感型的」。</span>'
     : S.dep?'<br><br><span style="color:var(--dim)">那件事你從來沒有真的處理過。它跟著你進了研究室，也跟著你退休。</span>'
     : S.traits.adhd?'<br><br><span style="color:var(--dim)">你到六十歲還是會在系務會議上走神。你已經不再為此感到抱歉了。</span>':'';
-  card(land>=1?'gold':tenured?'info':'bad','結局・'+title,body+extra+
+  /* 色階：金＝留下了東西　綠＝好好活著　藍＝中性　紫＝諷刺　紅＝壞 */
+  const ATONE={'學科台柱':'gold','學派':'gold','那一本書':'gold',
+    '穩健的一生':'good','行政人生':'good','一份工作':'info',
+    '研討會動物':'satire','網紅教授':'satire',
+    '流浪':'bad','沒有人讀':'bad'};
+  const atone=ATONE[title]||(land>=1?'gold':tenured?'info':'bad');
+  card(atone,'結局・'+title,body+extra+
     `<div class="statline">${KEYS.map(k=>`${ABL[k]} <b>${S.ab[k]}</b>`).join('　')}<br>`+
     `${S.O.n}出身｜${TIERS[S.tier].n}畢業｜${kind==='overseas'?'海外':'本土'}博士｜${job}${S.mhList.length?`｜${S.mhList.join('、')}`:''}</div>`);
-  endGame(land>=1?'gold':tenured?'good':'bad',title,
+  endGame(atone,title,
     [`${kind==='overseas'?'海外':'本土'}博士・三十年學術生涯`,job],[
     ['§','職位與資源'],
     ['教職',job],
@@ -1294,13 +1334,15 @@ function musicianRoll(){
   if(S.ab.th<=50)return false;
   let p=7;
   if(S.org==='art')p+=17;
-  if(S.traits.prodigy||S.litWins>0)p+=5;
+  if(S.traits.prodigy)p+=8; else if(S.litWins>0)p+=5;
   if(S.traits.bipolar)p+=5;
   return chance(p); }
 function career(reason){
   const raw=S.ab.th*0.35+S.ab.cf*0.30+S.ab.po*0.20+S.ab.ad*0.15;
   const mb=msBonus(), sc=raw+mb;
-  const cand=[['th',S.ab.th],['cf',S.ab.cf],['po',S.ab.po],['ad',S.ab.ad]].sort((a,b)=>b[1]-a[1]);
+  /* 早慧文青：不動判定分數，只在「哪一項主導」的比較上悄悄偏向理論 */
+  const thBias=S.traits.prodigy?5:0;
+  const cand=[['th',S.ab.th+thBias],['cf',S.ab.cf],['po',S.ab.po],['ad',S.ab.ad]].sort((a,b)=>b[1]-a[1]);
   const dom=cand[0][0];
   let band=sc>=50?0:sc>=38?1:2;
   const E={
@@ -1389,7 +1431,9 @@ function career(reason){
   }
   const [title,body]=special||E[band][dom];
   const rows=KEYS.map(k=>`${ABL[k]} <b>${S.ab[k]}</b>`).join('　');
-  const tone=title==='兼任研究助理'?'bad':title==='研究助理'?'info':(special||band===0?'gold':band===1?'good':'bad');
+  /* 同一套色階；個別結局以 CTONE 覆寫分帶預設 */
+  const CTONE={'研究助理':'good','兼任研究助理':'bad','接案文字工作者':'good','少年股神':'satire'};
+  const tone=CTONE[title]||(special||band===0?'gold':band===1?'good':'bad');
   card(tone,'結局・'+title,
     `${body}<div class="statline">${reason}｜職涯判定分數 <b class="hl">${sc.toFixed(1)}</b>${rule?`<br><span class="hl">${rule}</span>`:''}<br>`+
     `理論直覺 ${S.ab.th}×0.35　信心 ${S.ab.cf}×0.30　政治 ${S.ab.po}×0.20　行政 ${S.ab.ad}×0.15　=　${raw.toFixed(1)}<br>`+
@@ -1408,7 +1452,7 @@ function career(reason){
     : band===0 ? '你偶爾會夢見系學會的燈。醒來之後照常上班。'
     : '學術這條路你沒有走。多年後你會發現，走了的人也未必比較快樂。';
   card('info','後來',coda);
-  endGame(tone==='info'?'good':tone,title,[reason,rule||`職涯判定分數 ${sc.toFixed(1)}`],[
+  endGame(tone,title,[reason,rule||`職涯判定分數 ${sc.toFixed(1)}`],[
     ['§','職涯判定'],
     ['判定分數',sc.toFixed(1)],
     ['學位',DEGN()],
@@ -1423,6 +1467,120 @@ function career(reason){
     ...loveRows(),
   ]); }
 
+/* ================= 成就系統（本機儲存） ================= */
+const ACH_KEY='hssim_ach_v1';
+const ACH=[
+ {g:'求職結局',list:[
+  ['文化評論者','你是文化的引水人與產婆'],
+  ['自媒體創作者','你在乎要向社會發出聲音，你的訂閱者也在乎你'],
+  ['政治幕僚','法案的第三條第二項是你熬夜改的，上面沒有你的名字'],
+  ['高考文官','你成了部裡最會寫公文的人。'],
+  ['補教業講師','你現在也是說書人了'],
+  ['企業行銷企劃','你發現了行銷界對文科學歷來者不拒'],
+  ['NGO 倡議工作者','三萬八，偶而還要回捐，一個人做三個人的事'],
+  ['大學系辦助理','系上的人都認識你'],
+  ['接案文字工作者','還在寫作，只是無法為興趣而寫了'],
+  ['服務業','刷條碼可不是鬧著玩的'],
+  ['保險與直銷','同學開始有點害怕你吃飯的邀約'],
+  ['派遣行政','一年一簽，做得很好。沒有人問過你讀什麼'],
+  ['研究助理','很少研究，很多行政'],
+  ['兼任研究助理','時薪基本工資多一點，你甚至沒有拿到職工證'],
+  ['藝文工作者','白天上班晚上練團'],
+  ['少年股神','你總算找到了你過剩智識的應許之地'],
+  ['繼承家業','靠爸與敗家之外，還有得選嗎？'],
+  ['享受人生','誰說錢買不到快樂?'],
+ ]},
+ {g:'教職結局',list:[
+  ['學科台柱','你帶來了新的知識典範，也帶來了新的經費支持'],
+  ['學派','你的名字變成一種學術形容詞'],
+  ['那一本書','你寫得不多，但你留下一本不會被遺忘的經典'],
+  ['穩健的一生','不是天才，但三十年沒有停過'],
+  ['行政人生','最好的幾年都給了會議與評鑑，很少人想到你的研究'],
+  ['一份工作','按時上下班，按時產出，三十年很快就過去了'],
+  ['網紅教授','你很少研究，可你很愛說話，好消息是人們也愛聽你說'],
+  ['研討會動物','研討會使你快樂！'],
+  ['流浪','你感覺自己永遠在流浪，但誰不是呢'],
+  ['沒有人讀','你大半的著作完成後再也沒有人翻開過'],
+ ]},
+ {g:'其他',list:[
+  ['人社系484有毒','決定離開~待了十七年的世界~沒有打算要和任何人告別~'],
+ ]},
+];
+const ACH_SPECIAL=[
+ {g:'特殊',id:'l:zero',n:'七進七出',h:'只找到扶不起的自己，人們願稱你為文學獎趙子龍'},
+ {g:'特殊',id:'l:monster',n:'怪物新人',h:'大獎一座接著一座（獲獎超過6次）'},
+ {g:'特殊',id:'s:nepo',n:'用你的破鼓',h:'但不唱你的歌（文藝家傳出身成為藝文工作者）'},
+ {g:'特殊',id:'s:money',n:'錢買不到快樂',h:'是你很想說的話（資本之家出身進入登出結局）'},
+ {g:'特殊',id:'s:void',n:'師大跟台北一樣什麼都沒給我',h:'你度過了空白的四年'},
+ {g:'特殊',id:'s:gifted',n:'天縱英才',h:'你不是特別認真的人，你是讓認真的人心裡特別難受的人'},
+ {g:'特殊',id:'s:hospital',n:'生命鬥士',h:'你不得不休學離開，但你回來了'},
+ {g:'特殊',id:'s:scum',n:'渣人磁鐵',h:'被無情背叛第二次之後，你開始懷疑問題出在自己身上'},
+ {g:'特殊',id:'s:all',n:'結局收藏家',h:'解鎖全部結局'},
+];
+function achAllIds(){ const a=[]; ACH.forEach(g=>g.list.forEach(x=>a.push('e:'+x[0]))); return a; }
+function achLoad(){ try{ return new Set(JSON.parse(localStorage.getItem(ACH_KEY)||'[]')); }catch(e){ return new Set(); } }
+function achSave(set){ try{ localStorage.setItem(ACH_KEY,JSON.stringify([...set])); }catch(e){} }
+function achEarned(title){
+  const got=['e:'+title];
+  if((S.relLog||[]).filter(r=>r.k==='無情背叛').length>=2)got.push('s:scum');
+  if(S.litEntries>=7&&S.litWins===0)got.push('l:zero');
+  if(S.litWins>=6)got.push('l:monster');
+  if(title==='藝文工作者'&&S.org==='art')got.push('s:nepo');
+  if(S.org==='cap'&&title==='人社系484有毒')got.push('s:money');
+  if(S.slack>=3)got.push('s:void');
+  if(S.traits.gifted)got.push('s:gifted');
+  if(S.crisis>=1&&title!=='人社系484有毒')got.push('s:hospital');
+  return got; }
+function achGrant(title){
+  const set=achLoad(), fresh=[];
+  achEarned(title).forEach(id=>{ if(!set.has(id)){ set.add(id); fresh.push(id); } });
+  if(achAllIds().every(id=>set.has(id))&&!set.has('s:all')){ set.add('s:all'); fresh.push('s:all'); }
+  achSave(set); return {fresh,set}; }
+function achName(id){
+  if(id.slice(0,2)==='e:')return id.slice(2);
+  const f=ACH_SPECIAL.find(x=>x.id===id); return f?f.n:id; }
+function achMarkup(fresh){
+  const set=achLoad(), total=achAllIds().length+ACH_SPECIAL.length;
+  let owned=0; achAllIds().forEach(id=>{ if(set.has(id))owned++; });
+  ACH_SPECIAL.forEach(x=>{ if(set.has(x.id))owned++; });
+  const fs=new Set(fresh||[]);
+  const cell=(id,name,hint)=>{ const on=set.has(id);
+    return `<div class="ach-cell ${on?'on':''} ${fs.has(id)?'new':''}" data-n="${name}" data-h="${hint}">${name}</div>`; };
+  let html='';
+  ACH.forEach(grp=>{
+    html+=`<div class="ach-grp">${grp.g}</div><div class="ach-grid">`;
+    grp.list.forEach(([n,h])=>{ html+=cell('e:'+n,n,h); });
+    html+='</div>'; });
+  html+=`<div class="ach-grp">特殊</div><div class="ach-grid">`;
+  ACH_SPECIAL.forEach(x=>{ html+=cell(x.id,x.n,x.h); });
+  html+='</div>';
+  html+=`<div class="ach-detail">${fresh&&fresh.length
+      ? `<b>${achName(fresh[0])}</b>本場新解鎖。點任一格看說明。`
+      : '點一格看說明。亮起來的是已經走過的路。'}</div><div class="ach-reset">清除本機成就紀錄</div>`;
+  return {html,owned,total}; }
+function achBind(root,onReset){
+  const det=root.querySelector('.ach-detail');
+  root.querySelectorAll('.ach-cell').forEach(c=>{ c.onclick=()=>{
+    root.querySelectorAll('.ach-cell.sel').forEach(x=>x.classList.remove('sel'));
+    c.classList.add('sel');
+    det.innerHTML=`<b>${c.dataset.n}</b>${c.dataset.h}`; }; });
+  const rs=root.querySelector('.ach-reset');
+  if(rs)rs.onclick=()=>{ if(askYes('確定要清除這台裝置上的成就紀錄？')){
+    try{localStorage.removeItem(ACH_KEY);}catch(e){} onReset&&onReset(); } }; }
+function achPanel(){
+  const panel=$('ach-panel'); if(!panel)return;
+  const m=achMarkup([]); panel.innerHTML=m.html;
+  $('ach-count').textContent=`${m.owned} / ${m.total}`;
+  achBind(panel,achPanel); }
+function achWall(fresh){
+  const m=achMarkup(fresh);
+  const head=`<div id="ach-head"><span>成就</span><div><b>${m.owned} / ${m.total}</b>`+
+    `${fresh&&fresh.length?`<i>本場新解鎖 ${fresh.length}</i>`:''}</div></div>`;
+  const box=document.createElement('div'); box.className='card'; box.id='ach-wall';
+  box.innerHTML=head+m.html; logTarget().appendChild(box);
+  achBind(box,()=>{ box.remove(); achWall([]); });
+  scrollBottom(); }
+
 /* ================= 結算圖・分享・重播 ================= */
 function loveRows(){
   const PINK='#dd8fa4', RED='#dd7264', GREY='#948da6';
@@ -1436,6 +1594,7 @@ function loveRows(){
   return rows; }
 function endGame(tone,title,subs,rows){
   S.endInfo={tone,title,subs,rows};
+  let _fresh=[]; try{ _fresh=achGrant(title).fresh; }catch(e){}
   const sh=document.createElement('div'); sh.className='card';
   sh.innerHTML=`<h4>分享這段人生</h4>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -1450,6 +1609,7 @@ function endGame(tone,title,subs,rows){
     const ok=()=>{ e.target.textContent='✅ 已複製'; setTimeout(()=>e.target.textContent='🔗 複製重播連結',1600); };
     if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url).then(ok,()=>prompt('手動複製連結：',url));
     else prompt('手動複製連結：',url); };
+  try{ achWall(_fresh); }catch(e){}
   choose('',[
     {t:'↺ 開啟新的人生（新種子）',main:true,f:()=>{ location.href=base()+'?y='+S.startYear; }},
     {t:'用同一個種子重來',s:'seed: '+SEED,f:()=>{ location.href=replayURL(); }}]);
@@ -1457,8 +1617,23 @@ function endGame(tone,title,subs,rows){
 function base(){ return location.href.split('?')[0].split('#')[0]; }
 function replayURL(){ return base()+'?seed='+encodeURIComponent(SEED)+'&y='+S.startYear; }
 
+/* Google Fonts 的中文依 unicode-range 分段下載，canvas 繪圖不會觸發下載，
+   因此先把實際要畫的字串餵給 document.fonts.load 逐一預載 */
+function summaryText(){
+  const E=S.endInfo||{};
+  return [S.name,E.title,(E.subs||[]).join(''),
+    (E.rows||[]).map(r=>r[0]+r[1]).join(''),
+    KEYS.map(k=>ABL[k]).join(''),S.O.n,(S.tier&&TIERS[S.tier].n)||'',
+    '人文社科學生模擬器能力值歲年月日'].join(''); }
+async function ensureFonts(text){
+  if(!document.fonts||!document.fonts.load)return;
+  const specs=['400 24px "Noto Sans TC"','500 24px "Noto Sans TC"','700 24px "Noto Sans TC"',
+    '900 24px "Noto Sans TC"','700 24px "Noto Serif TC"','900 24px "Noto Serif TC"',
+    '500 24px "IBM Plex Mono"','700 24px "IBM Plex Mono"'];
+  try{ await Promise.all(specs.map(sp=>document.fonts.load(sp,text))); }catch(e){}
+  try{ await document.fonts.ready; }catch(e){} }
 async function shareImage(out,done){
-  try{ if(document.fonts&&document.fonts.ready)await document.fonts.ready; }catch(e){}
+  try{ await ensureFonts(summaryText()); }catch(e){}
   let url,fileName;
   try{ url=drawSummary(); }catch(err){ out.innerHTML=`<div class="statline">結算圖產生失敗：${err.message}</div>`; done&&done(); return; }
   fileName=`${S.name}_人文社科學生模擬器.png`;
@@ -1488,9 +1663,9 @@ function drawSummary(){
   const H = 712 + subs.length*34 + rows.reduce((h,r)=>h+(r[0]==='§'?44:36),0);
   const cv=document.createElement('canvas'); cv.width=W*DPR; cv.height=H*DPR;
   const c=cv.getContext('2d'); c.scale(DPR,DPR);
-  const SANS='"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif';
-  const SERIF='"Noto Serif TC","Songti TC",serif';
-  const MONO='"IBM Plex Mono",Menlo,monospace';
+  const SANS='"Noto Sans TC","PingFang TC","Heiti TC","Microsoft JhengHei","Noto Sans CJK TC",sans-serif';
+  const SERIF='"Noto Serif TC","Songti TC","PingFang TC","Microsoft JhengHei",serif';
+  const MONO='"IBM Plex Mono",Menlo,"Noto Sans TC","PingFang TC","Microsoft JhengHei",monospace';
   const PAPER='#e9e2d1', DIM='#948da6', BRASS='#d4a24c', SEAL='#c2452f', EDGE='#37334a';
   /* 底 */
   c.fillStyle='#141319'; c.fillRect(0,0,W,H);
@@ -1519,7 +1694,7 @@ function drawSummary(){
   T(meta,PAD,y+30,17,DIM,SANS,500);
   y+=76;
   /* 結局 */
-  const tc=E.tone==='bad'?'#dd7264':E.tone==='gold'?BRASS:'#8fc79f';
+  const tc={bad:'#dd7264',gold:BRASS,good:'#8fc79f',info:'#84a9d6',satire:'#c77fd0'}[E.tone]||'#8fc79f';
   c.fillStyle=tc; c.fillRect(PAD,y-22,6,30);
   T(E.title,PAD+18,y,30,tc,SERIF,900);
   y+=26;
@@ -1578,6 +1753,9 @@ $('force-toggle').onclick=e=>{ e.preventDefault();
   const g=$('seg-org'), open=g.style.display==='none';
   g.style.display=open?'grid':'none'; e.target.textContent=open?'交給命運':'指定出身';
   if(!open){ selOrg=null; g.querySelectorAll('button').forEach(x=>x.classList.remove('on')); } };
+try{ achPanel(); }catch(e){}
+$('ach-bar').onclick=()=>{ const pn=$('ach-panel'); pn.classList.toggle('open');
+  if(pn.classList.contains('open'))achPanel(); };
 $('seed-show').value=SEED;
 $('seed-re').onclick=e=>{e.preventDefault();SEED=Math.random().toString(36).slice(2,10);$('seed-show').value=SEED;};
 function askYes(msg){ try{ return confirm(msg); }catch(e){ return true; } }
