@@ -1511,7 +1511,7 @@ const ACH=[
 ];
 const ACH_SPECIAL=[
  {g:'特殊',id:'l:zero',n:'七進七出',h:'只找到扶不起的自己，人們願稱你為文學獎趙子龍'},
- {g:'特殊',id:'l:monster',n:'怪物新人',h:'大獎一座接著一座（獲獎超過6次）'},
+ {g:'特殊',id:'l:monster',n:'怪物新人',h:'大獎一座接著一座（獲獎超過5次）'},
  {g:'特殊',id:'s:nepo',n:'用你的破鼓',h:'但不唱你的歌（文藝家傳出身成為藝文工作者）'},
  {g:'特殊',id:'s:money',n:'錢買不到快樂',h:'是你很想說的話（資本之家出身進入登出結局）'},
  {g:'特殊',id:'s:void',n:'師大跟台北一樣什麼都沒給我',h:'你度過了空白的四年'},
@@ -1527,7 +1527,7 @@ function achEarned(title){
   const got=['e:'+title];
   if((S.relLog||[]).filter(r=>r.k==='無情背叛').length>=2)got.push('s:scum');
   if(S.litEntries>=7&&S.litWins===0)got.push('l:zero');
-  if(S.litWins>=6)got.push('l:monster');
+  if(S.litWins>=5)got.push('l:monster');
   if(title==='藝文工作者'&&S.org==='art')got.push('s:nepo');
   if(S.org==='cap'&&title==='人社系484有毒')got.push('s:money');
   if(S.slack>=3)got.push('s:void');
