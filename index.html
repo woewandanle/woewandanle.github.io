@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#090c11">
 <title>人文社科學生模擬器</title>
-<meta name="description" content="16 歲到大學畢業。理論直覺、實證努力、政治、信心、行政、口才——六種能力，一場人文社會科學的長期抗戰。">
+<meta name="description" content="16 歲到大學畢業。理論直覺、實證努力、政治、信心、行政、口才——六種能力，一場人文社會科學的多年試煉。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
 
@@ -3440,7 +3440,7 @@ function hudFace(ts){ const cv=$('bd-face'); if(!cv||!S)return;
    開場：夜裡的校舍剪影、流動的霧、烏鴉、正弦捲軸
    ===================================================================== */
 let heroBg=null, heroW=0, heroH=0, lastHero=0, scrollerStrip=null, fontReady=false, heroCrow=null, heroNextCrow=0;
-const SCROLL_TXT='人文社科學生模擬器 ── 十六歲到大學畢業 ── 理論直覺・實證努力・政治・信心・行政・口才 ── 六種能力，一場人文社會科學的長期抗戰 ── 獻給所有還在寫論文的人 ── ';
+const SCROLL_TXT='人文社科學生模擬器 ── 十六歲到大學畢業 ── 理論直覺・實證努力・政治・信心・行政・口才 ── 六種能力，一場人文社會科學的多年試煉 ── 獻給所有還在寫論文的人 ── ';
 function paintHero(w,h){ const T=th(), cv=newCanvas(w,h), c=cv.getContext('2d'), R=(x,y,ww,hh,col)=>{ c.fillStyle=col; c.fillRect(x|0,y|0,ww|0,hh|0); };
   /* 淺色（藍裂）：跟深色版一樣的剪影畫法——深靛近黑的剪影一路到底、淡紙色黎明天空、不疊霧（線描與淡色地面都被使用者否決） */
   const lt=!!T.light, S=(x,y,ww,hh)=>R(x,y,ww,hh,T.sil);
