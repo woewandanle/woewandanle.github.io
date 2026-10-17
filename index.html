@@ -1405,6 +1405,19 @@ function gradChoice(){
   ]); }
 
 /* 少年股神：直覺夠高、行政與實證都不能太高；躁鬱症大幅放寬門檻 */
+/* 轉職科技業（使用者提議）：把人社訓練包裝到別的領域。只給中段、低段分數的人（高分的人留在人社的好工作）；
+   實證最高的人不算（照樣卡在研究助理——使用者的核心設計：認真唸書在職場沒用）；碩士畢業反而是轉職的阻力（使用者）：門檻 +5。
+   兩條路（回傳 'smart'／'people'，否則 false）；不擲骰，不影響後面的隨機：
+   - 聰明型（產品、使用者研究）：理論 ≥ 56（ADHD 51）＋行政 ≥ 45 或實證 ≥ 50＋雙主修／輔系／交換學生其一（ADHD：念書念膩了的人，免）
+   - 會講型（人資、獵頭）：口才 ≥ 58 且高於理論、理論 ≥ 40＋行政 ≥ 45 或政治 ≥ 50 */
+function techSwitch(band){
+  if(band<1)return false;
+  const a=S.ab, adhd=!!S.traits.adhd, pen=(S.msLevel==='ok'||S.msLevel==='great')?5:0;
+  if(a.em>=Math.max(a.th,a.cf,a.po,a.ad))return false;
+  const cross=S.dualMajor==='full'||S.dualMajor==='minor'||!!S.traits.exch;
+  if(a.th>=(adhd?51:56)+pen&&(a.ad>=45||a.em>=50)&&(cross||adhd))return 'smart';
+  if(a.sp>a.th&&a.sp>=58+pen&&a.th>=40&&(a.ad>=45||a.po>=50))return 'people';
+  return false; }
 function stockGod(){
   const bip=!!S.traits.bipolar;
   const thMin=bip?45:52, adMax=bip?50:42, emMax=bip?55:48;
@@ -1676,6 +1689,10 @@ function career(reason){
   const cand=[['th',S.ab.th+thBias],['cf',S.ab.cf],['po',S.ab.po],['ad',S.ab.ad]].sort((a,b)=>b[1]-a[1]);
   const dom=cand[0][0];
   let band=sc>=50?0:sc>=38?1:2;
+  /* 補教業講師的嘴砲加成：中段分數時，口才超過 50 的部分每 3 點算理論 +1（最多 +6）。
+     只用在「哪一項主導」的比較，不進判定分數：口才只能幫本來就夠聰明的人搶到補教，不能靠嘴升級 */
+  const spBias=band===1?Math.min(6,Math.max(0,(S.ab.sp-50)/3)):0;
+  const domE=spBias?[['th',S.ab.th+thBias+spBias],['cf',S.ab.cf],['po',S.ab.po],['ad',S.ab.ad]].sort((a,b)=>b[1]-a[1])[0][0]:dom;
   const E={
    0:{th:['文化評論者','一家還算有名的出版社要你當編輯，兩年後你開始在副刊寫專欄。<br>薪水很低，但每次有人在書店拿起你編的書，你都覺得值得。'],
       cf:['自媒體創作者','你開了一個談社會議題的頻道。第八個月開始有業配，第二年你辭掉了正職。<br>你把人社訓練變成了說故事的能力，系上老師不太理解，但你的訂閱者理解。'],
@@ -1691,7 +1708,7 @@ function career(reason){
       ad:['派遣行政','你在一間公司做約聘行政，一年一簽。<br>工作內容不難，你做得很好。沒有人問過你大學讀什麼。']},
   };
   /* --- 專屬結局判定，優先於一般分帶 --- */
-  let special=null, rule='';
+  let special=null, rule='', tsw=null;
   if(musicianRoll()){
     if(S.org==='art'){
       special=['藝文工作者',
@@ -1746,6 +1763,18 @@ function career(reason){
         `<span style="color:var(--dim)">「現在專任助理都要碩士了。你要不要先去考個研究所？」<br>`+
         `你點頭說好，回家算了一下學費和兩年的機會成本，然後沒有再去想這件事。</span>`];
       rule=`兼任研究助理｜實證努力 ${S.ab.em} 明顯高於其他能力　無碩士學位`; }
+  }else if((tsw=techSwitch(band))){
+    const ms=S.msLevel==='ok'||S.msLevel==='great';
+    /* 標題同一個（使用者）：聰明型、會講型各一版內文與「後來」 */
+    special=['轉職科技業', tsw==='smart'
+      ? `你把在田野練出來的訪談技術，拿去觀察消費者為什麼在結帳頁面猶豫了。<br>`+
+        `以前你讀社會學是為了拆解資本隱蔽的宰制結構，現在你寫訪談報告，是幫公司把讓人上癮的設計藏得更好。<br>`+
+        `去年年終領了四個月，你搬出了頂樓加蓋，公司有員工餐廳和健身房，出國不用再挑最便宜的紅眼班機和住宿。<br>`+
+        `<span style="color:var(--dim)">入職第一筆薪水入帳那天，你才意識到原來自己也有標價，但你還是收下了。</span>`
+      : `你不會寫程式，但你很會追蹤進度，也很會開會，也很會做上頭想看的投影片。<br>`+
+        `你每天夾在工程師和老闆中間，把雙方的話翻成對方聽得下去的版本。<br>`+
+        `<span style="color:var(--dim)">那些年讀的批判理論沒有幫你改變世界，只是讓你很清楚，自己的位置是體制裡最好用的潤滑劑。</span>`];
+    rule=`轉職科技業・${tsw==='smart'?`聰明型｜理論直覺 ${S.ab.th}＋${S.traits.adhd?'ADHD（念膩了就換）':'雙主修／輔系／交換'}`:`會講型｜口才 ${S.ab.sp} 高於理論直覺 ${S.ab.th}`}${ms?'　碩士學歷反而是轉職的阻力':''}`;
   }else if(stockGod()){
     const bip=!!S.traits.bipolar;
     special=['少年股神',
@@ -1760,10 +1789,10 @@ function career(reason){
            `你其實知道自己在賭，只是這場賭局比補習班的講台有趣太多了。</span>`)];
     rule='少年股神｜理論直覺高・行政與實證皆不高'+(bip?'（躁鬱症門檻放寬）':'');
   }
-  const [title,body]=special||E[band][dom];
+  const [title,body]=special||E[band][domE];
   const rows=KEYS.map(k=>`${ABL[k]} <b>${S.ab[k]}</b>`).join('　');
   /* 同一套色階；個別結局以 CTONE 覆寫分帶預設 */
-  const CTONE={'研究助理':'good','兼任研究助理':'bad','接案文字工作者':'good','少年股神':'satire'};
+  const CTONE={'研究助理':'good','兼任研究助理':'bad','接案文字工作者':'good','少年股神':'satire','轉職科技業':'good'};
   const tone=CTONE[title]||(special||band===0?'gold':band===1?'good':'bad');
   card(tone,'結局・'+title,
     `${body}<div class="statline">${reason}｜職涯判定分數 <b class="hl">${sc.toFixed(1)}</b>${rule?`<br><span class="hl">${rule}</span>`:''}<br>`+
@@ -1775,6 +1804,7 @@ function career(reason){
     : special&&title==='研究助理' ? '有人問你在做什麼研究。你想了一下，說「幫老師做一些事」。'
     : special&&title==='兼任研究助理' ? '你認識的每一個人都說你很認真。這句話你已經聽了很多年。'
     : special&&title==='少年股神' ? '你偶爾會夢見大學還沒有那麼需要在乎錢的自己，醒來之後開盤了。'
+    : special&&title==='轉職科技業' ? (tsw==='smart' ? '你沒有背叛你讀過的東西，只是你的田野現在是電商的後臺。' : '你會想起當年那個說唸人社沒有用的親戚，現在你覺得他說對了一半。')
     : special&&title==='繼承家業' ? '同學會上大家問你在做什麼，你說「家裡的事」。話題就停在那裡了。'
     : special&&title==='享受人生' ? '有人說你浪費了那顆腦袋。你想反駁，但你想不出要拿它去換什麼。'
     : S.traits.prodigy&&band===2 ? '十六歲那年你得過全國文學獎。這件事現在沒有人記得，包括你自己也很少想起。'
@@ -1818,6 +1848,7 @@ const ACH=[
   ['兼任研究助理','時薪基本工資多一點，你甚至沒有拿到職工證'],
   ['藝文工作者','白天上班晚上練團。'],
   ['少年股神','你總算找到了你過剩智識的應許之地'],
+  ['轉職科技業','你發現涓滴理論在台灣是真實的'],
   ['繼承家業','靠爸與敗家之外，還有得選嗎？'],
   ['享受人生','誰說錢買不到快樂?'],
  ]},
@@ -3138,8 +3169,33 @@ const SC={cv:null,ctx:null,W:180,H:40,gy:32,scale:3,bg:null,bgKey:'',from:null,t
   sx:-16,tx:50,walkUntil:0,jumpAt:0,jumpH:0,parts:[],bubble:null,moodTmp:null,moodUntil:0,key:'hs',tod:'morn',lastHeart:0,lastFw:0,phase:0,
   crow:null,nextCrow:0,blood:false,tearUntil:0,tone:.5};
 let ending=null, grad=false;
-function sceneKey(){ if(!S)return 'hs'; if(ending)return 'end-'+ending.tone; if(S.lostYear)return 'lost'; if(S.grade<3)return 'hs'; return 'uni-'+(S.tier||'nat'); }
-function sceneTod(){ if(ending)return {gold:'night',bad:'night',satire:'night',good:'dusk',info:'dusk'}[ending.tone]||'dusk'; if(grad)return 'day'; return ['morn','day','dusk'][SC.phase]||'day'; }
+/* 結局場景表（使用者逐一指定）。顏色（tone）只管氣氛（表情、標題色、彩帶），不再決定場景。
+   s：場景 key；alma＝母校校景；job＝任教那一級的校景（兩款的照入學規則由種子固定；沒有專任教職時：紅→雨夜城市、其他→夕陽城市）
+   tod：時段；fw：煙火；rain：大雨。原本金色的「白色單屋」（end-gold）不再使用（使用者：金可能要重畫）。 */
+const END_SCENES={
+ '文化評論者':{s:'end-info',fw:1},'自媒體創作者':{s:'end-info',fw:1},'政治幕僚':{s:'end-rally'},'高考文官':{s:'end-info',fw:1},
+ '藝文工作者':{s:'end-live'},'繼承家業':{s:'end-info',fw:1},'享受人生':{s:'end-info',fw:1},
+ '補教業講師':{s:'end-info'},'企業行銷企劃':{s:'end-info'},'NGO 倡議工作者':{s:'end-info'},'接案文字工作者':{s:'end-good'},
+ '大學系辦助理':{s:'alma',tod:'dusk'},'研究助理':{s:'alma',tod:'dusk'},'兼任研究助理':{s:'alma',tod:'night',rain:1},
+ '少年股神':{s:'end-info'},'轉職科技業':{s:'end-info'},'服務業':{s:'end-bad'},'保險與直銷':{s:'end-bad'},'派遣行政':{s:'end-bad'},'人社系484有毒':{s:'end-bad'},
+ '學科台柱':{s:'end-stage'},'學派':{s:'end-stage'},'那一本書':{s:'end-book'},
+ '穩健的一生':{s:'job',tod:'dusk'},'行政人生':{s:'job',tod:'dusk'},'一份工作':{s:'job',tod:'dusk'},
+ '網紅教授':{s:'end-talk'},'研討會動物':{s:'end-conf'},'沒有人讀':{s:'job',tod:'night',rain:1},'流浪':{s:'end-bad'}};
+const SCENE_TOD={'end-info':'dusk','end-good':'dusk','end-bad':'night','end-stage':'night','end-rally':'night','end-live':'night','end-book':'night','end-talk':'night','end-conf':'day'};
+/* 室內結局場景：底色；不畫天空，也不算戶外（不疊霧、星星、烏鴉） */
+const INDOOR={'end-stage':'#120a16','end-rally':'#0b0810','end-live':'#140d09','end-book':'#120a16','end-talk':'#05060a','end-conf':'#1a1410'};
+/* 網紅教授的電腦螢幕：16:9、置中（paintBg 與 frame 共用） */
+function talkGeo(W){ const sw=46, cx=Math.max(27,Math.min(W>>1,W-112)); return {cx,sx0:cx-(sw>>1),sw,top:3,sh:26}; }  /* 窄螢幕往左挪，避開右上角按鈕（約 85px） */
+const JOB_TIER={'帝大霸權 教職':'emp','頂大系統 教職':'top','國立大學 教職':'nat','私校聯盟 教職':'priv'};
+function endScene(tone,title,subs){
+  const e=END_SCENES[title]||{s:tone==='bad'?'end-bad':tone==='good'?'end-good':'end-info',fw:tone==='gold'};
+  let tier=null;
+  if(e.s==='alma')tier=(S&&S.tier)||'nat';
+  else if(e.s==='job'){ tier=JOB_TIER[(subs||[]).find(x=>JOB_TIER[x])]||null; if(!tier)return tone==='bad'?{scene:'end-bad',tod:'night'}:{scene:'end-info',tod:'dusk'}; }
+  if(tier)return {scene:'uni-'+tier,tod:e.tod||'dusk',altTier:tier,fw:!!e.fw,rain:!!e.rain};
+  return {scene:e.s,tod:e.tod||SCENE_TOD[e.s]||'dusk',fw:!!e.fw}; }
+function sceneKey(){ if(!S)return 'hs'; if(ending)return ending.scene||'end-'+ending.tone; if(S.lostYear)return 'lost'; if(S.grade<3)return 'hs'; return 'uni-'+(S.tier||'nat'); }
+function sceneTod(){ if(ending)return ending.tod||{gold:'night',bad:'night',satire:'night',good:'dusk',info:'dusk'}[ending.tone]||'dusk'; if(grad)return 'day'; return ['morn','day','dusk'][SC.phase]||'day'; }
 function curOutfit(){ if(!S)return 'uniform'; if(ending)return ending.outfit; if(grad)return 'gown'; if(S.lostYear)return 'pajama'; if(S.grade<3)return 'uniform'; if(S.tier==='intl')return 'coat'; return 'hoodie'; }
 function curMood(noTmp){ const now=performance.now();
   if(!noTmp&&SC.moodTmp&&now<SC.moodUntil)return SC.moodTmp;
@@ -3187,7 +3243,7 @@ function paintBg(key,tod,alt){
   function crowsOn(pts,n){ for(let k=0;k<n;k++){ const i=Math.floor(hash(k+40)*(pts.length-1)); const [x0,y0]=pts[i],[x1]=pts[i+1]; const t=.2+hash(k+50)*.6, x=x0+(x1-x0)*t|0, y=y0+Math.sin(t*Math.PI)*3-2|0;
       R(x,y,2,2,'#08090b'); R(x+2,y,1,1,'#08090b'); R(x-1,y+1,1,1,'#08090b'); } }
   function ground(top,body){ R(0,gy,W,H-gy,D(body)); R(0,gy,W,1,D(top)); R(0,gy+1,W,1,D(dk(top,.85))); }
-  const rainy=key==='uni-intl'||key==='end-bad'||(key==='uni-top'&&alt===1);  /* 政大：陰天＋毛毛雨 */
+  const rainy=key==='uni-intl'||key==='end-bad'||(key==='uni-top'&&alt===1)||!!(ending&&ending.rain&&ending.scene===key);  /* 政大：陰天＋毛毛雨；結局「沒有人讀」：校景下大雨 */
   /* 大學建築（依實景照片）：共用小工具 */
   function tex(x,y,w,h,c1,c2,t){ for(let j=y;j<y+h;j++)for(let i=x;i<x+w;i++)R(i,j,1,1,bay(i,j)<t?c2:c1); }
   function roof(cx,y0,hws,cL,cR,cD,ol,tips){ const n=hws.length, yb=y0+n-1, hb=hws[n-1];
@@ -3490,7 +3546,7 @@ function paintBg(key,tod,alt){
       for(const [lx,ly,lw,lh,cl] of [[-6,-17,6,4,'#3f8a46'],[1,-19,6,5,'#4f9a4a'],[-4,-23,5,4,'#5aa857'],[2,-25,5,4,'#3f8a46'],[-1,-14,5,3,'#5aa857']]){ R(fx+lx,gy+ly,lw,lh,cl); R(fx+lx+1,gy+ly+1,lw-2,1,'#6cbf62'); } }  /* 落地植物 */
     const hx=Math.max(4,tX-12); R(hx,0,1,5,'#ece8df'); R(hx-2,5,5,3,'#f4f2ee'); R(hx+2,5,1,3,'#d9d6cf');  /* 白色吊盆（使用者） */ for(let i=0;i<9;i++){ R(hx-2+(i%3===0?0:4)-(i>5?1:0),8+i,1,1,i%2?'#6cb85a':'#4f9a4a'); } }
   /* 天空 */
-  if(key==='end-satire')R(0,0,W,H,'#120a16');
+  if(INDOOR[key])R(0,0,W,H,INDOOR[key]);
   else if(key!=='lost'){ sky((rainy?(night?['#030408','#0a0e18','#141a26']:SKY.rain):SKY[tod]).map(TN));
     if(night&&!rainy)stars();
     if(night&&!rainy){ circle(W-22,8,4,'#cfc9b8'); circle(W-20,7,3,SKY.night[0]); for(let a=0;a<40;a++){ const t=a/40*Math.PI*2, x=W-22+Math.cos(t)*7|0, y=8+Math.sin(t)*7|0; if(bay(x,y)<.35)R(x,y,1,1,'#1a2232'); } }
@@ -3512,7 +3568,7 @@ function paintBg(key,tod,alt){
   else if(key==='uni-priv')bPCCU();
   else if(key==='uni-intl'){ if(alt)bEDI(); else bUCL(); }
   else if(key==='lost')paintRest();
-  else if(key==='end-gold'){
+  else if(key==='end-gold'){  /* 白色單屋：目前沒有結局用到（見 endScene），留著等重畫 */
     hills(D('#2d3a46'),gy,8,.05,2);
     const x0=W*0.42|0; box(x0,12,52,gy-12,D('#8a8070'),'#0a0a0c'); windows(x0+1,13,50,gy-14,{cols:8,rows:3,ww:3,wh:3,col:D('#262c33')});
     box(x0+20,4,12,9,D('#8a8070'),'#0a0a0c'); for(let i=0;i<5;i++)R(x0+20+i,3-i,12-i*2,1,'#0a0a0c');
@@ -3526,10 +3582,118 @@ function paintBg(key,tod,alt){
       for(let y=gy-bh+2;y<gy-1;y+=3)for(let x=bx+1;x<bx+bw-1;x+=3)if(hash(x*7+y)>.62)R(x,y,1,1,th().win); }
     const p1=pole(4,26), p2=pole(W-4,26); wires([p1,p2]); crowsOn([p1,p2],4);
     ground('#2a2d36','#23262e'); }
-  else if(key==='end-satire'){
+  else if(key==='end-stage'){
     for(let x=0;x<W;x++)if(bay(x,3)<.25)R(x,2,1,1,'#a88a4a');
     for(let s=0;s<2;s++){ const x0=s?W-28:0; R(x0,0,28,gy+2,'#5a1a1c'); for(let i=0;i<28;i+=4)R(x0+i+(s?0:2),0,1,gy+2,'#360e10'); }
     R(0,0,W,4,'#3a1012'); R(0,gy,W,H-gy,'#3a2a1c'); R(0,gy,W,1,'#5a4430'); for(let x=0;x<W;x+=8)R(x,gy,1,H-gy,'#2a1e14'); }
+  else if(key==='end-book'){  /* 那一本書：頒獎舞台改版——聚光燈下一座講台，上面攤開一本大書（📖）；聚光燈外壓暗（使用者：像地下演出一樣） */
+    const cx=W>>1;
+    for(let x=0;x<W;x++)if(bay(x,3)<.25)R(x,2,1,1,'#3e3220');
+    for(let s=0;s<2;s++){ const x0=s?W-28:0; R(x0,0,28,gy+2,'#260b0d'); for(let i=0;i<28;i+=4)R(x0+i+(s?0:2),0,1,gy+2,'#170607'); }
+    R(0,0,W,4,'#180708'); R(0,gy,W,H-gy,'#140e09'); R(0,gy,W,1,'#20170e'); for(let x=0;x<W;x+=8)R(x,gy,1,H-gy,'#0e0906');
+    /* 聚光：中間亮、往兩側漸淡（不要硬邊三角形）；地上一圈柔和的光 */
+    for(let y=3;y<gy;y++){ const q=(y-3)/(gy-3), sp=3+q*13; for(let x=Math.floor(cx-sp);x<=cx+sp;x++){ const e=Math.abs(x-cx)/sp; c.globalAlpha=(.07+q*.1)*(1-e*e); R(x,y,1,1,'#ffe2a6'); } }
+    for(let y=gy-1;y<gy+4;y++)for(let x=cx-20;x<=cx+20;x++){ const e=Math.hypot((x-cx)/20,(y-gy-.5)/3.2); if(e<1){ c.globalAlpha=.34*(1-e*e); R(x,y,1,1,'#ffe2a6'); } } c.globalAlpha=1;
+    R(cx-6,23,13,1,'#9a7048'); R(cx-5,24,11,8,'#5a3c24'); R(cx-4,25,9,6,'#6e4e30'); R(cx-4,28,9,1,'#4a3220'); R(cx-6,31,13,1,'#2a1a10');
+    { const bx=cx-8, by=14, top=d=>by+1+Math.round((8-d)*.35), bot=d=>by+7+Math.round((8-d)*.15);
+      for(let x=-1;x<=17;x++){ const d=Math.min(8,Math.abs(x-8)); R(bx+x,top(d)+2,1,bot(d)-top(d)-1,'#8a2e26'); R(bx+x,bot(d)+1,1,1,'#4a1612'); }
+      for(let x=0;x<=16;x++){ if(x===8)continue; const d=Math.abs(x-8), t0=top(d), b0=bot(d);
+        R(bx+x,t0,1,b0-t0+1,d===1?'#dccaa0':'#f6ecd0'); R(bx+x,t0,1,1,'#fffaf0');
+        if(d>=2&&d<=7)for(let y=t0+2;y<b0;y+=2)R(bx+x,y,1,1,'#b8a888'); }
+      R(bx+8,top(0)+1,1,bot(0)-top(0)+1,'#8a2e26'); } }
+  else if(key==='end-rally'){  /* 競選舞台（政治幕僚；依使用者附圖構圖）：大螢幕、重複圖樣背板、台上一排幕僚剪影、聚光；紫色系（中性，不用藍綠）、不放文字標誌。彩帶與台下觀眾在 frame */
+    const cx=W>>1, sw=Math.max(56,Math.min(96,W*0.44|0)), sx=cx-(sw>>1), bw=Math.min(W-6,Math.max(120,W*0.8|0)), bx=cx-(bw>>1);
+    R(0,0,W,1,'#1a1422'); for(let x=3;x<W;x+=6)R(x,1,1,1,'#efe4ff');
+    R(sx-1,2,sw+2,15,'#151018');
+    for(let y=3;y<16;y++)for(let x=sx;x<sx+sw;x++){ const d=Math.hypot((x-cx)/(sw*.5),(y-9)/7); R(x,y,1,1,bay(x,y)<1-d*.9?'#c9a3ea':(y%2?'#7d4fa8':'#8a5bb4')); }
+    { const P='#6a3f92'; circle(cx,7,2,P); R(cx-3,10,7,6,P); R(cx-5,9,2,1,P); R(cx+4,9,2,1,P); for(let i=0;i<4;i++){ R(cx-4-i,8-i,1,1,P); R(cx+4+i,8-i,1,1,P); } }
+    R(bx,17,bw,12,'#4f2470'); R(bx,17,bw,1,'#8a5bb0');
+    for(let r=0;r<2;r++)for(let x=bx+3+(r?5:0);x+3<=bx+bw-2;x+=10){ const y=19+r*5; R(x,y,3,3,'#6c3a94'); R(x+1,y+1,1,1,'#4f2470'); }
+    R(0,29,W,3,'#1c1224'); R(bx-4,29,bw+8,1,'#3a2650'); R(0,31,W,1,'#2a1a36');
+    /* 台上幕僚剪影：高低不一；有人雙手舉高（V 字）、有人只舉一手、有人手放下 */
+    { const SIL='#1e1029', RIM='#4a2e66';
+      for(let x=bx+5,i=0;x<bx+bw-5;x+=8,i++){ const top=19+(hash(i+11)*3|0), pose=hash(i+31);
+        R(x+1,top,1,1,RIM); R(x,top+1,3,2,SIL); R(x,top+1,1,1,RIM); R(x+2,top+1,1,1,RIM); R(x-1,top+3,5,29-top-3,SIL);
+        const arm=sd=>{ const ax=sd<0?x-2:x+4, ox=sd<0?-1:1; R(ax,top+2,1,2,SIL); R(ax+ox,top,1,2,SIL); R(ax+ox,top-1,1,1,RIM); };
+        if(pose>.35)arm(-1); if(pose>.35||pose<.15)arm(1); } }
+    R(0,gy,W,H-gy,'#1d1229'); R(0,gy,W,1,'#2a1a36'); }
+  else if(key==='end-live'){  /* 地下演出場子（藝文工作者；依使用者附圖構圖）：天花板燈架往下打光束、布幕、台上四人樂團剪影、音箱、台下觀眾；
+      光用暖黃與琥珀、半透明光束（使用者：不要那麼霓虹）。最前排觀眾起伏在 frame */
+    const cx=W>>1, SIL='#0d0805', RIM='#f6d08a', IN='#1a1009', INR='#d9a85a';
+    R(0,0,W,3,'#0b0806'); R(0,3,W,1,'#2a1f16');
+    for(let y=4;y<24;y++)for(let x=0;x<W;x++){ const d=Math.hypot((x-cx)/(W*.42),(y-15)/13), a=Math.max(0,1-d)*.62; R(x,y,1,1,mix(x%3===0?'#1a100b':'#22150f','#9a6230',a)); }
+    const fx0=cx-Math.floor((cx+8)/16)*16;
+    for(let fx=fx0,k=0;fx<W+8;fx+=16,k++){ const tx=fx+(cx-fx)*.3, warm=k%2?'#f0a650':'#ffd27a';
+      for(let y=5;y<25;y++){ const q=(y-5)/19, xc=fx+(tx-fx)*q, sp=1+q*6, x0=Math.round(xc-sp), x1=Math.round(xc+sp), ci=Math.round(sp*.4);
+        c.globalAlpha=.13*(1-q*.4); R(x0,y,x1-x0+1,1,warm); c.globalAlpha=.16*(1-q*.4); R(Math.round(xc)-ci,y,2*ci+1,1,warm); c.globalAlpha=1; }
+      R(fx-1,3,3,2,'#1d150f'); R(fx,4,1,1,'#fff0c0'); }
+    R(0,24,W,1,'#7a5530'); R(0,25,W,3,'#2e1f13');
+    const amp=x=>{ R(x,15,7,9,'#0e0a07'); R(x,15,7,1,'#4a3622'); for(let y=17;y<23;y+=2)for(let i=1;i<6;i+=2)R(x+i,y,1,1,'#2c2118'); R(x+1,12,5,3,'#0e0a07'); R(x+1,12,5,1,'#4a3622'); };
+    amp(cx-54); amp(cx+47);
+    const person=(x,top,gtr)=>{ R(x+1,top,1,1,RIM); R(x,top+1,3,2,SIL); R(x,top+1,1,1,RIM); R(x+2,top+1,1,1,RIM); R(x-1,top+1,1,3,SIL);
+      R(x-1,top+3,5,5,SIL); R(x-1,top+3,1,1,RIM); R(x+3,top+3,1,1,RIM);
+      R(x-1,top+8,2,24-top-8,SIL); R(x+2,top+8,2,24-top-8,SIL);
+      if(gtr){ R(x-3,top+6,3,3,IN); R(x-3,top+6,3,1,INR); for(let i=0;i<7;i++)R(x-1+i,top+6-(i*.6|0),1,1,i>4?INR:IN); } };
+    person(cx-36,14,true); person(cx+10,13,true); person(cx+34,14,true);
+    R(cx+7,16,1,8,'#2a2018'); R(cx+6,16,3,1,'#2a2018'); R(cx+8,15,2,1,'#5a4028');
+    { const dx=cx-12; R(dx,15,3,2,SIL); R(dx+1,14,1,1,RIM); R(dx-1,17,5,3,SIL); R(dx-1,17,1,1,RIM); R(dx+3,17,1,1,RIM);
+      for(const [x0,x1] of [[dx-9,dx-5],[dx+5,dx+9]]){ R(x0,16,x1-x0+1,1,'#e8c47a'); R((x0+x1)>>1,17,1,7,'#2a2018'); }
+      circle(dx+1,21,3,IN); R(dx-1,18,5,1,INR); R(dx-6,19,4,2,IN); R(dx-6,19,4,1,INR); R(dx+5,19,4,2,IN); R(dx+5,19,4,1,INR); }
+    R(0,28,W,H-28,'#1c120b');
+    for(const [y,sz,rim] of [[25,2,'#a67844'],[29,3,'#8a6234'],[33,4,'#6b4a26']])for(let x=-2,i=0;x<W+2;i++){ const jx=x+(hash(i*3+y)*2|0), jy=y+(hash(i*7+y)*2|0);
+      R(jx,jy,sz,2,'#070504'); R(jx-1,jy+2,sz+2,H-jy-2,'#070504'); R(jx,jy,sz,1,rim); x+=sz+3+(hash(i+y)*3|0); }
+    }
+  else if(key==='end-conf'){  /* 研討會（研討會動物；依使用者附圖）：木牆＋鮮紅布條（白色字塊，不是真字）、黑板、投影幕、
+      論壇長桌（五位與談人）＋左側講台，右側投影幕下是茶水桌（使用者：茶敘融入演講版二合一），前景一排聽眾；名牌吊繩用藍色（使用者） */
+    const cx=W>>1, SKIN='#d9b592', HAIR='#2a2420', LAN='#3d7bd6', BADGE='#f2f0ea';
+    R(0,0,W,2,'#1a1410'); for(let x=5;x<W;x+=12)R(x,1,2,1,'#f0dca0');
+    for(let y=2;y<31;y++)for(let x=0;x<W;x++)R(x,y,1,1,(x%10===0)?'#563a26':(y===15?'#7a573c':'#6a4a32'));
+    const scr=x0=>{ R(x0-1,5,27,16,'#26262a'); R(x0,6,25,14,'#dfe6ea'); R(x0+3,8,19,2,'#9aa6b2'); for(let k=0;k<4;k++)R(x0+3,12+k*2,12+(hash(x0+k)*8|0),1,'#b8c2cc'); };
+    scr(cx-72); scr(cx+48);
+    R(cx-45,11,91,12,'#5a3d28'); R(cx-44,12,89,10,'#2f4a3a'); for(let x=cx-40;x<cx+40;x+=7)if(hash(x)>.5)R(x,14+(hash(x+1)*5|0),3,1,'#4a6656');
+    { const bx=cx-43, bw=87; R(bx,3,bw,7,'#c8281f'); R(bx,3,bw,1,'#e04a3a'); R(bx,9,bw,1,'#9a1d17'); R(bx-1,3,1,1,'#e8e4dc'); R(bx+bw,3,1,1,'#e8e4dc');
+      for(let k=0,x=bx+4;x+3<bx+bw-3;k++,x+=5)for(let yy=0;yy<4;yy++)for(let xx=0;xx<3;xx++)if(hash(k*31+yy*7+xx)>.42||yy===0&&xx===1)R(x+xx,5+yy,1,1,'#f6f1e8'); }
+    const sit=(x,cl,hr)=>{ R(x,14,3,1,hr||HAIR); R(x,15,3,2,SKIN); R(x,15,1,1,hr||HAIR); R(x-1,17,5,5,cl); R(x,17,1,2,LAN); R(x+2,17,1,2,LAN); R(x+1,19,1,2,BADGE); };
+    const stand=(x,top,cl,pt,cup,hr)=>{ R(x,top,3,1,hr||HAIR); R(x,top+1,3,2,SKIN); R(x-1,top+3,5,5,cl); R(x,top+3,1,2,LAN); R(x+2,top+3,1,2,LAN); R(x+1,top+5,1,2,BADGE);
+      R(x-1,top+8,2,gy-top-9,pt); R(x+2,top+8,2,gy-top-9,pt); R(x-1,gy-1,2,1,'#141414'); R(x+2,gy-1,2,1,'#141414'); if(cup){ R(x+4,top+5,1,1,cl); R(x+4,top+4,2,1,'#f4f2ee'); } };
+    const flowers=(x,y)=>{ for(const [dx,dy,c] of [[0,0,'#d9443a'],[2,-1,'#e86a8a'],[-2,-1,'#c8281f'],[1,1,'#f0a0b0'],[-1,1,'#d9443a'],[3,1,'#e86a8a'],[-3,1,'#3f7a3a'],[4,0,'#3f7a3a'],[0,-2,'#4f8a44']])R(x+dx,y+dy,2,2,c); R(x-2,y+3,5,2,'#2a3a2a'); };
+    /* 茶水桌（右側投影幕下）：咖啡壺、杯子、點心，旁邊端著杯子寒暄的人 */
+    R(cx+46,23,26,1,'#d8d4cc'); R(cx+46,24,26,6,'#efece6'); for(let x=cx+47;x<cx+72;x+=4)R(x,25,1,5,'#d8d4cc');
+    for(const ux of [cx+48,cx+53]){ R(ux,17,4,6,'#9da2a8'); R(ux,17,4,1,'#c4c8cc'); R(ux+1,16,2,1,'#6a6e74'); R(ux+4,20,1,1,'#6a6e74'); }
+    for(let k=0;k<5;k++)R(cx+59+k*2,22,1,1,'#f4f2ee'); R(cx+66,22,5,1,'#c8a060');
+    const T=gy-13;
+    stand(cx+50,T+1,'#6a3a3a','#2a2a30',true); stand(cx+57,T,'#2a3550','#26262a',false,'#4a3a2a'); stand(cx+64,T+1,'#5a5a5e','#3a3a40',true); stand(cx+71,T,'#7a6a5a','#2a2a30',true,'#1a1a1a');
+    /* 論壇長桌：五位與談人；左側講台與講者 */
+    [[-36,'#2a3550'],[-21,'#5a5a5e','#4a3a2a'],[-6,'#1e1e22'],[9,'#4a6a8a'],[24,'#6a5a4a','#1a1a1a']].forEach(([dx,cl,hr])=>sit(cx+dx,cl,hr));
+    R(cx-44,22,84,1,'#3a3c46'); R(cx-44,23,84,8,'#1a1c24'); for(let x=cx-43;x<cx+40;x+=3)R(x,24,1,7,'#14161c');
+    for(const dx of [-36,-21,-6,9,24]){ R(cx+dx-1,21,5,1,'#f2f0ea'); R(cx+dx+4,18,1,4,'#202020'); R(cx+dx+4,17,1,1,'#5a5a5a'); R(cx+dx-3,19,1,3,'#9ac4d8'); }
+    flowers(cx+36,19);
+    R(cx-58,12,3,1,HAIR); R(cx-58,13,3,2,SKIN); R(cx-59,15,5,4,'#2a2a30'); R(cx-58,15,1,2,LAN); R(cx-56,15,1,2,LAN);
+    R(cx-61,18,9,13,'#4a3424'); R(cx-62,17,11,1,'#6a4a32'); R(cx-53,15,1,2,'#202020'); R(cx-54,14,2,1,'#5a5a5a');
+    R(0,31,W,H-31,'#4a4448'); for(let y=32;y<H;y+=2)for(let x=(y%4)?1:3;x<W;x+=4)R(x,y,1,1,'#56505a');
+    /* 前景聽眾（背影）：兩排，後腦勺＋肩膀，脖子後面露出藍色吊繩 */
+    const SH=['#3a4458','#5a5a60','#2a2a30','#6a5040','#4a5a6a','#7a6a5a','#3a3a46'];
+    for(let x=1,k=0;x<W+4;x+=9,k++){ const hr=hash(k*5)>.8?'#5a4a3a':'#1e1a18', y=34+(hash(k*3+1)*2|0);
+      R(x+1,y,3,1,hr); R(x,y+1,5,3,hr); R(x-1,y+4,7,H-y-4,SH[k%SH.length]); R(x,y+4,5,1,LAN); } }
+  else if(key==='end-talk'){  /* 網紅教授（使用者定案）：晚上沒開燈、只有電腦螢幕亮著；16:9 螢幕裡播著裁切過的頒獎舞台影片，
+      講者是全黑剪影、像 TED 一樣在台上走動、聚光燈跟著他（在 frame），影片下方紅灰播放條會前進 */
+    const g=talkGeo(W), cx=g.cx, sx0=g.sx0, sw=g.sw, y0=g.top, sh=g.sh;
+    /* 螢幕泛光：離螢幕方框越近越亮（近處一圈亮、遠處慢慢暗掉），桌面在螢幕正下方被照亮 */
+    const glow=(x,y)=>{ const dx=Math.max(sx0-2-x,0,x-(sx0+sw+1)), dy=Math.max(y0-2-y,0,y-(y0+sh+1)), d=Math.hypot(dx,dy*1.2); return Math.min(1,Math.exp(-d/11)*.62+Math.exp(-d/2.5)*.3); };
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++){ const g2=glow(x,y); R(x,y,1,1,y<33?mix('#05060a','#6a7aa0',g2):y===33?mix('#141009','#7a7a8a',g2):mix('#0c0907','#4a4c5c',g2*.95)); }
+    R(sx0-2,y0-2,sw+4,sh+4,'#14151a'); R(sx0-2,y0-2,sw+4,1,'#24262e'); R(cx-1,y0+sh+1,3,1,'#2a2c34');
+    R(cx-2,y0+sh+2,5,3,'#18191e'); R(cx-8,33,17,2,'#1c1d22'); R(cx-8,33,17,1,'#2a2c34');
+    R(sx0,y0,sw,sh,'#120a16');
+    R(sx0,y0,sw,2,'#3a1012'); for(let x=sx0;x<sx0+sw;x++)if(bay(x,y0+2)<.3)R(x,y0+2,1,1,'#a88a4a');
+    for(const x0 of [sx0,sx0+sw-7]){ R(x0,y0+2,7,16,'#5a1a1c'); for(let k=1;k<7;k+=3)R(x0+k,y0+2,1,16,'#360e10'); }
+    const fl=y0+17; R(sx0,fl,sw,4,'#3a2a1c'); R(sx0,fl,sw,1,'#5a4430');
+    for(let x=sx0+1;x<sx0+sw-1;x+=4)R(x,fl+2+(hash(x)>.5?1:0),3,2,'#07040a');
+    const cb=y0+sh-5; R(sx0,cb,sw,5,'#0e0e12'); R(sx0+2,cb+1,sw-4,1,'#5a5a60');
+    R(sx0+2,cb+2,1,3,'#f2f2f2'); R(sx0+4,cb+2,1,3,'#f2f2f2');  /* 暫停鍵（影片正在播） */
+    R(sx0+6,cb+3,2,1,'#c8c8c8'); R(sx0+9,cb+3,1,1,'#c8c8c8'); R(sx0+sw-5,cb+3,3,1,'#c8c8c8'); R(sx0+sw-4,cb+2,1,3,'#c8c8c8');
+    R(cx-17,36,35,2,'#101218'); for(let x=cx-16;x<cx+17;x+=2)R(x,36,1,1,mix('#1e2028','#8a92aa',glow(x,36)));
+    R(cx+22,36,3,2,'#121418'); R(cx+23,36,1,1,mix('#22242c','#8a92aa',glow(cx+23,36)));
+    R(cx-31,31,4,4,'#24201c'); R(cx-27,32,1,2,'#24201c'); R(cx-28,31,1,4,mix('#24201c','#9aa2b8',glow(cx-28,31))); R(cx-30,31,2,1,'#100c08'); }
   else if(key==='end-bad'){
     for(let i=0;i<10;i++){ const bw=14+hash(i)*10|0, bx=i*20-6, bh=10+hash(i+20)*14|0; R(bx,gy-bh,bw,bh,'#0e121b');
       for(let y=gy-bh+2;y<gy-2;y+=4)for(let x=bx+2;x<bx+bw-2;x+=4)if(hash(x*3+y)>.86)R(x,y,2,1,'#7a6438'); }
@@ -3538,20 +3702,21 @@ function paintBg(key,tod,alt){
     R(0,gy,W,H-gy,'#11141b'); R(0,gy,W,1,'#1d2230'); for(let x=lx-6;x<lx+7;x++)if(bay(x,gy+3)<.4)R(x,gy+3,1,1,'#6a6040'); }
   return cv; }
 /* 同一級大學有兩種校景時：入學那刻由種子決定，四年不換；不消耗遊戲亂數 R() */
-function sceneAlt(){ if(!S||!S.tier)return 0; const t=String(typeof SEED==='undefined'?'':SEED)+'|'+S.tier; let h=2166136261;
+function sceneAlt(){ const tr=(ending&&ending.altTier)||(S&&S.tier); if(!S||!tr)return 0; const t=String(typeof SEED==='undefined'?'':SEED)+'|'+tr;  /* 教職結局：任教那一級，同級就跟讀書時同一個校園 */ let h=2166136261;
   for(let i=0;i<t.length;i++){ h^=t.charCodeAt(i); h=Math.imul(h,16777619); } return (h>>>0)%2; }
 function sizeScene(){ const cv=SC.cv; if(!cv)return; const w=cv.parentElement.clientWidth||360;
   const sc=2, W=Math.ceil(w/sc);  /* 場景縮減：一律 2 倍（高 80px），把篇幅讓給大頭貼 */
   if(W!==SC.W||sc!==SC.scale){ SC.W=W; SC.scale=sc; cv.width=W; cv.height=SC.H; cv.style.height=(SC.H*sc)+'px'; SC.bgKey=''; SC.from=null; }
-  SC.tx=(SC.key==='end-satire'?SC.W/2-8:SC.W*0.27)|0; }
+  SC.tx=((SC.key==='end-stage'||SC.key==='end-book')?SC.W/2-8:SC.W*0.27)|0; }
 function syncScene(){ if(!SC.cv)return;
-  SC.key=sceneKey(); SC.tod=sceneTod(); SC.tx=(SC.key==='end-satire'?SC.W/2-8:SC.W*0.27)|0;
-  SC.alt=sceneAlt(); const k=SC.key+'|'+SC.tod+'|'+SC.W+'|'+pref.theme+'|'+SC.alt+'|'+SC.tone;
+  SC.key=sceneKey(); SC.tod=sceneTod(); SC.tx=((SC.key==='end-stage'||SC.key==='end-book')?SC.W/2-8:SC.W*0.27)|0;
+  SC.alt=sceneAlt(); const k=SC.key+'|'+SC.tod+'|'+SC.W+'|'+pref.theme+'|'+SC.alt+'|'+SC.tone+'|'+(ending&&ending.rain?1:0);
   if(k!==SC.bgKey){ const nb=paintBg(SC.key,SC.tod,SC.alt);
     if(SC.bg&&SC.bg.width===nb.width){ SC.from=SC.bg.getContext('2d').getImageData(0,0,SC.W,SC.H); SC.to=nb.getContext('2d').getImageData(0,0,SC.W,SC.H); SC.tStart=performance.now(); }
     SC.bg=nb; SC.bgKey=k; } }
 function spawn(n,f){ for(let i=0;i<n;i++)SC.parts.push(f(i)); }
 const CONF=['#c4a05a','#c2543f','#7393ab','#d3d0c5','#829c66'];
+const RCONF=['#c9a0e8','#f2eef7','#e0b84c','#e48fb5','#9d6fd6'];  /* 競選舞台的彩帶：紫、白、金、粉（中性，不用藍綠） */
 function react(kind){ const now=performance.now(), hx=SC.sx+8, hy=SC.gy-SH+4;
   if(kind==='gold'||kind==='trait'){ SC.jumpAt=now; SC.jumpH=kind==='trait'?8:5; SC.moodTmp='joy'; SC.moodUntil=now+1800;
     if(kind==='trait'){ spawn(28,()=>({t:'conf',x:MR()*SC.W,y:-MR()*20,vx:(MR()-.5)*.02,vy:.01+MR()*.01,life:2600,col:CONF[MR()*5|0],born:now})); SC.bubble={g:'!',until:now+1600}; } }
@@ -3589,26 +3754,47 @@ function frame(ts){
     c.putImageData(o,0,0); if(p>=1)SC.from=null; }
   else c.drawImage(SC.bg,0,0);
   const R=(x,y,w,h,col)=>{ c.fillStyle=col; c.fillRect(Math.round(x),Math.round(y),w,h); };
-  const outdoor=SC.key!=='lost'&&SC.key!=='end-satire';
+  const outdoor=SC.key!=='lost'&&!INDOOR[SC.key];
   /* 霧：地面上方一條會流動的點陣霧 */
   if(outdoor){ c.fillStyle=SC.tod==='night'?'#26303d':SC.tod==='dusk'?'#4a3c40':'#7c8285';
     for(let y=gy-9;y<gy+3;y++){ const fall=1-Math.abs(y-(gy-3))/8; if(fall<=0)continue;
       for(let x=0;x<W;x++){ const dsty=(.22+.14*Math.sin(x*.05+t*.35)+.1*Math.sin(x*.13-t*.6))*fall; if(bay(x+(t*5|0),y)<dsty*.7)c.fillRect(x,y,1,1); } } }
   /* 星星閃爍 */
-  if(SC.tod==='night'&&outdoor&&SC.key!=='end-bad'){ for(let i=0;i<3;i++){ const ph=(t*1.1+i*.9)%3.2; if(ph<.35){ const x=(i*53+17)%W, y=(i*13+3)%(gy-12); glyph(c,'star',x-1,y-1,'#bdb8aa'); } } }
+  if(SC.tod==='night'&&outdoor&&SC.key!=='end-bad'&&!(ending&&ending.rain)){ for(let i=0;i<3;i++){ const ph=(t*1.1+i*.9)%3.2; if(ph<.35){ const x=(i*53+17)%W, y=(i*13+3)%(gy-12); glyph(c,'star',x-1,y-1,'#bdb8aa'); } } }
   /* 烏鴉偶爾飛過（室內場景不畫，切進室內時清掉飛到一半的那隻） */
   if(!outdoor)SC.crow=null;
   if(outdoor&&!SC.crow&&ts>SC.nextCrow){ SC.crow={x:-6,y:4+MR()*10,v:.018+MR()*.012,born:ts}; SC.nextCrow=ts+7000+MR()*9000; }
   if(SC.crow){ const cr=SC.crow, x=cr.x+(ts-cr.born)*cr.v, y=cr.y+Math.sin((ts-cr.born)/400)*1.5; glyph(c,Math.floor(ts/160)%2?'crow0':'crow1',x,y,'#07080a'); if(x>W+6)SC.crow=null; }
   /* 煙火（低彩度） */
-  if(SC.key==='end-gold'&&ts-SC.lastFw>1100){ SC.lastFw=ts; const fx=20+MR()*(W-40), fy=4+MR()*12, col=CONF[MR()*5|0];
+  if(ending&&ending.fw&&ts-SC.lastFw>1100){ SC.lastFw=ts; const fx=20+MR()*(W-40), fy=4+MR()*12, col=CONF[MR()*5|0];
     spawn(16,i=>{ const a=i/16*Math.PI*2; return {t:'fw',x:fx,y:fy,vx:Math.cos(a)*.016,vy:Math.sin(a)*.016,life:900,col,born:ts}; }); }
   /* 舞台聚光 */
-  if(SC.key==='end-satire'){ c.fillStyle='#e8dcb02e'; for(let y=4;y<gy+2;y++){ const sp=3+(y-4)*.42; for(let x=SC.tx+8-sp;x<SC.tx+8+sp;x++)if(bay(x|0,y)<.35)c.fillRect(x|0,y,1,1); }
+  if(SC.key==='end-book'){ for(let i=0;i<3;i++){ const ph=(t*1.3+i*.7)%2.1; if(ph<.4)glyph(c,'star',(W>>1)-9+i*8,10+(i%2)*2,'#fff0c0'); } }  /* 那一本書：書上方的閃光 */
+  if(SC.key==='end-stage'||SC.key==='end-book'){ if(SC.key==='end-stage'){ c.fillStyle='#e8dcb02e'; for(let y=4;y<gy+2;y++){ const sp=3+(y-4)*.42; for(let x=SC.tx+8-sp;x<SC.tx+8+sp;x++)if(bay(x|0,y)<.35)c.fillRect(x|0,y,1,1); } }
     for(let i=0;i<W;i+=7){ const b=Math.sin(t*3+i)>.7?1:0; R(i+1,H-4-b,5,4,'#07040a'); R(i+2,H-6-b,3,2,'#07040a'); } }
+  /* 競選舞台：台下觀眾剪影起伏、有人舉手；彩帶一直落 */
+  if(SC.key==='end-rally'){ for(let i=0;i<W;i+=6){ const b=Math.sin(t*2.6+i*.7)>.55?1:0; R(i,H-4-b,4,4,'#07050a'); R(i+1,H-5-b,2,1,'#07050a');
+      if(Math.sin(t*1.7+i*1.3)>.62)R(i+(i%12?3:0),H-9-b,1,5,'#07050a'); }
+    if(ts-(SC.lastConf||0)>60){ SC.lastConf=ts; spawn(4,()=>({t:'conf',x:MR()*W,y:-2,vx:(MR()-.5)*.02,vy:.007+MR()*.008,life:6500,col:RCONF[MR()*RCONF.length|0],born:ts})); } }
+  /* 地下演出：最前排觀眾跟著節奏起伏、有人舉手（暖色輪廓光） */
+  if(SC.key==='end-live'){ for(let i=0;i<W;i+=7){ const b=Math.sin(t*4.2+i*.9)>.3?1:0; R(i,H-5-b,5,6,'#060403'); R(i+1,H-6-b,3,1,'#060403'); R(i+1,H-6-b,3,1,'#7a5530');
+      if(Math.sin(t*1.9+i*1.7)>.7){ const hx=i+4; R(hx,H-11-b,1,6,'#060403'); R(hx,H-11-b,1,1,'#7a5530'); } } }
+  /* 研討會：茶水桌那群人頭上輪流冒出「…」對話泡泡 */
+  if(SC.key==='end-conf'){ const cx=W>>1, k=Math.floor(t/1.1)%3, x=cx+[52,61,68][k], y=gy-19; if((t%1.1)<.85){ R(x-3,y,9,5,'#f4f2ee'); R(x-1,y+5,2,1,'#f4f2ee'); for(let i=0;i<3;i++)R(x-1+i*2,y+2,1,1,'#5a5550'); } }
+  /* 網紅教授：影片播放條紅色進度往前走（約一分鐘一輪），紅點拖桿 */
+  if(SC.key==='end-talk'){ const g=talkGeo(W), cb=g.top+g.sh-5, L=g.sw-4, p=Math.floor(((t/60)%1)*L), fl=g.top+17;
+    /* 講者：全黑剪影，像 TED 一樣在台上來回走動，偶爾舉手比劃；聚光燈跟著他 */
+    const ph=t*.45, sx=Math.round(g.cx+Math.sin(ph)*11), mv=Math.abs(Math.cos(ph))>.3, dir=Math.cos(ph)>0?1:-1, st=Math.floor(t*4)%2, K='#000000';
+    c.fillStyle='#e8dcb048'; for(let y=g.top+3;y<fl;y++){ const sp=1.5+(y-g.top-3)*.42; for(let x=Math.round(sx-sp);x<=sx+sp;x++)if(bay(x,y)<.35)c.fillRect(x,y,1,1); }
+    c.fillStyle='#c8a86a66'; c.fillRect(sx-6,fl,13,1);
+    R(sx-1,fl-9,3,3,K); R(sx-2,fl-6,5,4,K);
+    if(mv){ if(st){ R(sx-2,fl-2,1,2,K); R(sx+1,fl-2,2,2,K); } else { R(sx-1,fl-2,2,2,K); R(sx+2,fl-2,1,2,K); } } else { R(sx-2,fl-2,2,2,K); R(sx+1,fl-2,2,2,K); }
+    const ax=dir>0?sx+3:sx-3; if(Math.sin(t*1.7)>.45)R(ax,fl-9,1,3,K); else R(ax,fl-6,1,3,K);
+    R(g.sx0+2,cb+1,p,1,'#e8322a'); R(g.sx0+1+p,cb,3,3,'#e8322a'); }
   if(SC.key==='lost')restFX(c,ts);
-  /* 雨 */
-  if(SC.key==='end-bad'||SC.key==='uni-intl'||(SC.key==='lost'&&false)){ c.fillStyle=SC.key==='end-bad'?'#56607a':'#7f8a98';
+  /* 雨（結局「沒有人讀」：大雨——更密、更長、更快） */
+  if(ending&&ending.rain){ c.fillStyle='#6b7690'; for(let i=0;i<84;i++){ const x=(i*29.7+t*14)%W, y=((i*13.1)+t*95*(1+i%3*.25))%(H+6)-6; c.fillRect(x|0,y|0,1,3); } }
+  else if(SC.key==='end-bad'||SC.key==='uni-intl'||(SC.key==='lost'&&false)){ c.fillStyle=SC.key==='end-bad'?'#56607a':'#7f8a98';
     const n=SC.key==='end-bad'?46:26; for(let i=0;i<n;i++){ const x=(i*37.3+t*8)%W, y=((i*17.9)+t*60*(1+i%3*.3))%(H+4)-4; c.fillRect(x|0,y|0,1,2); } }
   /* 政大（頂大 B）：每個時段都下毛毛雨——細短斜線、落得快、半透明（不能像雪：不用慢速單點） */
   if(SC.key==='uni-top'&&SC.alt===1){ c.fillStyle=SC.tod==='dusk'?'rgba(150,158,172,.5)':'rgba(190,200,210,.45)';
@@ -3923,7 +4109,7 @@ function install(){
   finale=function(){ grad=true; try{ syncScene(); react('end'); sfx('end_gold'); }catch(e){} _finale(); };
   endGame=function(tone,title,subs,rows){
     try{ const acad=(subs||[]).some(s=>/學術生涯/.test(s));
-      ending={tone,title,outfit:'hoodie'}  /* 三十年後保有穿衣自由：一律沿用玩家自選便服 */;
+      ending=Object.assign({tone,title,outfit:'hoodie'},endScene(tone,title,subs))  /* 三十年後保有穿衣自由：一律沿用玩家自選便服；場景見 endScene */;
       grad=false; SC.blood=false; syncScene(); react('end'); sfx(tone==='bad'?'end_bad':tone==='gold'?'end_gold':'end'); if(pref.bgm)BGM.toEnd();  /* 結局：換一捲卡帶（停帶→喀→喀→結局配樂） */
       const hs=[...$('log').querySelectorAll('.card h4')].reverse().find(h=>/^(壞)?結局・/.test(h.textContent)); if(hs)portrait(hs.parentElement,true,/^壞結局・/.test(hs.textContent));
       /* 結局卡（有畫像）放最上面：學術線把它移到「三十年後」（論文、計畫數）之前；畫面停在結局卡（現在是由上往下讀） */
@@ -3982,7 +4168,7 @@ function init(){
   window.addEventListener('resize',()=>{ sizeScene(); syncScene(); });
   try{ matchMedia(`(resolution: ${window.devicePixelRatio||1}dppx)`).addEventListener('change',applyFont); }catch(e){}
   install(); requestAnimationFrame(frame); }
-return {init,pips,drawFace,th,_bgm:BGM,canvasFont:()=>'"Cubic11","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif',_sc:SC,_set:(e,g)=>{ending=e;grad=!!g;syncScene();},_paint:paintBg};
+return {init,pips,drawFace,th,_bgm:BGM,canvasFont:()=>'"Cubic11","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif',_sc:SC,_set:(e,g)=>{ending=e;grad=!!g;syncScene();},_paint:paintBg,_endScene:endScene};
 })();
 try{ PX.init(); }catch(e){ showFatal(e); }
 </script>
