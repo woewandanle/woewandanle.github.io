@@ -735,7 +735,7 @@ function startYear(){ divider(`${S.year} 年 · ${S.age} 歲 · ${stageLabel()}`
   if(S.lostYear){ lostYearCard(); return; }
   /* 高一、高二年初的努力暗示（使用者寫的台詞）：放在年初進修（擲骰分配）之前；純文字，不碰亂數 */
   if(S.stage==='HS'&&S.grade===0)card('satire','班導師說','<span style="color:var(--dim)">高中一步一腳印<br>踏實努力把大考的東西都練熟<br>其他的等上台大便知道了</span>');
-  if(S.stage==='HS'&&S.grade===1)card('satire','爸媽說','<span style="color:var(--dim)">你表哥就是從高二就開始努力衝刺<br>今年才考得上頂大<br>現階段的你應該要務實<br>不要整天搞一些有的沒的</span>');
+  if(S.stage==='HS'&&S.grade===1&&!['prof','art','cap'].includes(S.org))card('satire','爸媽說','<span style="color:var(--dim)">你表哥就是從高二就開始努力衝刺<br>今年才考得上頂大<br>現階段的你應該要務實<br>不要整天搞一些有的沒的</span>');
   stepQ=[phaseTrain,phaseEvent,phaseLit,phaseLove,phaseMental]; nextStep(); }
 function lostYearCard(){ board(1);
   card('info','休學療養',pick([
