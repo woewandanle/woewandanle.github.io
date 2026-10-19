@@ -1519,6 +1519,7 @@ function phdChoice(direct){
   ]); }
 
 /* ================= 三十年學術職涯 ================= */
+const INST_PO=65, INST_SP=55;  /* 中央機構：政治 > 65 且 口才 < 55 */
 function academicCareer(kind){
   const a=S.ab, YEARS=30;
   /* 時間推進：博班年數 + 三十年職涯 */
@@ -1531,7 +1532,9 @@ function academicCareer(kind){
   const post=a.th*0.30+a.po*0.25+a.em*0.20+a.ad*0.10+Math.min(S.rep,100)*0.10
     +(kind==='overseas'?8:0)+tierBonus-(S.weakPhd?14:0)+luck;
   const POSTS=[[78,'帝大霸權 教職'],[66,'頂大系統 教職'],[54,'國立大學 教職'],[42,'私校聯盟 教職'],[-99,'沒有專任教職']];
-  const job=POSTS.find(x=>post>=x[0])[1];
+  let job=POSTS.find(x=>post>=x[0])[1];
+  /* 中央機構：原本會拿到帝大霸權教職的人裡，政治高、口才低的改去中央機構做研究（不消耗亂數） */
+  if(job==='帝大霸權 教職'&&a.po>INST_PO&&a.sp<INST_SP)job='中央機構 研究';
   const tenured=job!=='沒有專任教職';
   /* --- 科技部計畫：30 次申請 --- */
   const gp=clamp((a.em*0.35+a.po*0.30+a.ad*0.25+a.th*0.10-24)*1.7,6,86)*(tenured?1:0.45);
@@ -1615,7 +1618,7 @@ function academicCareer(kind){
     row('　國內研討會',confD+' 篇','var(--dim)')+
     `<div style="margin-top:6px"></div>`+
     row('優良教師',teach+' 次')+
-    row('系主任',chair?chair+' 年':'沒有當過')+
+    row(job==='中央機構 研究'?'所長':'系主任',chair?chair+' 年':'沒有當過')+
     `</div>`);
   board(2);
   academicCoda(kind,job,tenured,B,P,grants,teach,chair,mult,repUp,nBooks,nPapers,luck,nConf,confI,confD,confDrag); }
@@ -1638,11 +1641,12 @@ function academicCoda(kind,job,tenured,B,P,grants,teach,chair,mult,repUp,nBooks,
       '系上有些耳語你當然聽過——說你把學問講得太簡單，說你的書單十年沒換過，說你上一篇期刊論文是哪一年的事。<br>'+
       '你不太在意。你相信這個學科需要有人去引入活水，而那個人剛好是你。<br>'+
       '<span style="color:var(--dim)">你的行程表排到明年。你確實已經很久沒有坐下來寫完一篇東西了。</span>'; }
-  else if(nConf>=26&&S.ab.po>=65&&nConf>=nPapers*1.2&&(B.infl+P.infl)<=4){ title='研討會動物';
+  else if((()=>{ const inst=job==='中央機構 研究';  /* 中央機構：只做研究，影響力門檻放寬到 10、倍數放寬到 1.1 */
+      return nConf>=26&&S.ab.po>=65&&nConf>=nPapers*(inst?1.1:1.2)&&(B.infl+P.infl)<=(inst?10:4); })()){ title='研討會動物';
     body='你的履歷上，研討會那一欄比期刊那一欄長。<br>'+
       '你認識每一個人，每一個人也都認識你。你在茶敘時間促成的合作案比你寫過的論文還多。<br>'+
       '<span style="color:var(--dim)">那些發表過的東西後來有沒有變成什麼，沒有人追問過。</span>'; }
-  else if(chair>=6){ title='行政人生';
+  else if(chair>=6&&job!=='中央機構 研究'){ title='行政人生';  /* 中央機構沒有行政人生結局 */
     body='你把最好的十年給了會議、評鑑、招生和系務。系上因為你而運作良好。<br>'+
       '<span style="color:var(--dim)">退休演講上，同事說你是系上的支柱。沒有人提到你的研究。</span>'; }
   else if(infl>=6){ title='穩健的一生';
@@ -1691,7 +1695,7 @@ function academicCoda(kind,job,tenured,B,P,grants,teach,chair,mult,repUp,nBooks,
     ['國際研討會',confI+' 篇'],
     ['國內研討會',confD+' 篇','#948da6'],
     ['§','教學與行政'],
-    ['優良教師',teach+' 次'],['系主任',chair?chair+' 年':'沒有當過'],
+    ['優良教師',teach+' 次'],[job==='中央機構 研究'?'所長':'系主任',chair?chair+' 年':'沒有當過'],
     ['§','出身與紀錄'],
     ['出身',S.O.n],['大學',TIERS[S.tier].n],
     ['碩士論文',S.weakPhd?'平庸':'優秀'],
@@ -3275,7 +3279,7 @@ const SCENE_TOD={'end-info':'dusk','end-good':'dusk','end-bad':'night','end-stag
 const INDOOR={'end-stage':'#120a16','end-rally':'#0b0810','end-live':'#140d09','end-book':'#120a16','end-talk':'#05060a','end-conf':'#1a1410'};
 /* 網紅教授的電腦螢幕：16:9、置中（paintBg 與 frame 共用） */
 function talkGeo(W){ const sw=46, cx=Math.max(27,Math.min(W>>1,W-112)); return {cx,sx0:cx-(sw>>1),sw,top:3,sh:26}; }  /* 窄螢幕往左挪，避開右上角按鈕（約 85px） */
-const JOB_TIER={'帝大霸權 教職':'emp','頂大系統 教職':'top','國立大學 教職':'nat','私校聯盟 教職':'priv'};
+const JOB_TIER={'帝大霸權 教職':'emp','中央機構 研究':'inst','頂大系統 教職':'top','國立大學 教職':'nat','私校聯盟 教職':'priv'};
 function endScene(tone,title,subs){
   const e=END_SCENES[title]||{s:tone==='bad'?'end-bad':tone==='good'?'end-good':'end-info',fw:tone==='gold'};
   let tier=null;
@@ -3379,6 +3383,65 @@ function paintBg(key,tod,alt){
     for(const dx of [-8,0,8]){ const c=cx+dx; R(c-2,25,5,1,WH); R(c-3,26,7,gy-26,WH); R(c-1,26,3,1,OP); R(c-2,27,5,gy-27,OP); }
     bush(cx-33,5); bush(cx+33,5);
     ground('#3c5132','#33452b'); R(cx-12,gy,25,1,D('#8f8a7f')); R(cx-14,gy+1,29,1,D('#77736a')); }
+  /* 中央機構（研究）：依使用者附圖——左邊白色山牆小樓（紅磚底、白色鑰匙孔壁龕）、圓形塔樓（紅磚底、白色窗帶、褐瓦八角頂＋小寶頂）、
+     中間凹進去的入口、右翼紅磚兩層＋白色頂層、一排往右遞降的白色階梯山牆（深色壓頂）與陽台木棚架；背後綠色山丘、前面椰子樹 */
+  function bIAS(){ const x0=Math.max(2,Math.min((W*0.55|0)-44,W-171));  /* 整棟 88 格寬；右上角按鈕約佔最右 81 格（y 4–16），窄螢幕把房子往左挪，山牆才不會被按鈕蓋住 */
+    const BR=D('#b4623a'),BD=D('#96502f'),WH=D('#d9d3c5'),WD=D('#aba496'),CAP=D('#47413d'),
+      RL=D('#8c5638'),RR=D('#6f4129'),RK=D('#56311f'),WO=D('#5b3b27'),GL=D('#283038'),OP=D('#1b1613'),OL=D('#24130f'),LF=D('#3f5d36');
+    const win=(x,y,w,h)=>R(x,y,w,h,lit&&hash(x*7+y*13)>.5?th().win:GL);
+    /* 背後：遠山＋左邊高起的樹林 */
+    const g=(x,mx,s,ht)=>{ const t=(x-mx)/s; return ht*Math.exp(-t*t); };
+    const far=D('#4f6658'), mA=D('#35512f'), mH=D('#44633b'), mS=D('#283f22');
+    for(let x=0;x<W;x++){ const h=Math.round(gy-11-3*Math.sin(x*.05+1.3)-2*Math.sin(x*.17+.4)); R(x,h,1,gy-h,far); }
+    for(let x=0;x<W;x++){ const a=g(x,x0+2,26,20), b=g(x,x0+104,36,9), h=Math.round(gy-4-Math.max(a,b));
+      for(let y=h;y<gy;y++){ const v=bay(x,y); R(x,y,1,1,v<.16?mH:v>.9?mS:mA); } }
+    /* 階梯山牆：每往下一階左右各寬兩格；每一階的踏面是一格深色壓頂，最下一階兩端各凸出一格；右緣一格陰影 */
+    const gable=(xl,w,top,bot)=>{ const sp=[]; for(let k=w%2?3:2;k<w;k+=4)sp.push(k); sp.push(w);
+      sp.forEach((k,r)=>{ const a=xl+((w-k)>>1), y=top+r; R(a,y,k,bot-y,WH); R(a+k-1,y,1,bot-y,WD); });
+      sp.forEach((k,r)=>{ const a=xl+((w-k)>>1), y=top+r, p=r?sp[r-1]:0, t=(k-p)>>1;
+        if(!r)R(a,y,k,1,CAP); else{ R(a,y,t,1,CAP); R(a+k-t,y,t,1,CAP); }
+        if(r===sp.length-1){ R(a-1,y,1,1,CAP); R(a+k,y,1,1,CAP); } }); };
+    /* 左邊小樓 */
+    gable(x0,9,10,25); win(x0+5,16,2,2);
+    box(x0,25,9,gy-25,BR,OL); tex(x0+1,26,7,gy-27,BR,BD,.12);
+    R(x0+4,26,1,1,WH); R(x0+3,27,3,3,WH); R(x0+4,30,1,1,WH);  /* 白色拱形壁龕 */
+    /* 中間凹進去的入口 */
+    gable(x0+36,8,12,25); win(x0+39,18,2,2);
+    R(x0+36,25,8,gy-25,OP); R(x0+36,25,8,1,WD); R(x0+38,26,1,gy-26,WD); R(x0+41,26,1,gy-26,WD);
+    /* 圓形塔樓（比右翼矮，照片比例）：每一直條依朝向打光（光從左前方來），窗戶照圓柱面投影越靠邊越窄；屋頂是八角攢尖，看得到三個斜面 */
+    const xc=x0+21, hr=14;
+    const lv=x=>{ const u=Math.max(-1,Math.min(1,(x+.5-xc)/hr)), s=Math.cos(Math.asin(u)+.6); return s>.88?0:s>.6?1:s>.3?2:3; };
+    const WT=[D('#ece6d8'),D('#d9d3c5'),D('#b6afa1'),D('#958e81')], BT=[D('#c66f43'),D('#b4623a'),D('#985131'),D('#7b4127')];
+    R(xc-hr-1,18,1,gy-18,OL); R(xc+hr,18,1,gy-18,OL);
+    for(let x=xc-hr;x<xc+hr;x++){ const l=lv(x); R(x,18,1,1,WT[Math.min(3,l+2)]); R(x,19,1,4,WT[l]); R(x,23,1,1,WT[Math.min(3,l+1)]);
+      for(let y=24;y<gy;y++)R(x,y,1,1,bay(x,y)<.12?BT[Math.min(3,l+1)]:BT[l]); }
+    for(const t of [-.35,.1,.5,.85,1.15]){ const x=Math.round(xc+hr*Math.sin(t)), w=Math.max(1,Math.round(3.2*Math.cos(t))); win(x-(w>>1),19,w,3); }
+    R(xc-9,26,3,gy-26,OP); R(xc+3,26,9,4,OP); R(xc+6,26,1,4,WT[2]); R(xc+9,26,1,4,WT[2]);
+    { const RA=D('#8a5537'),RC=D('#94603f'),RB=D('#6a3e28'),RH=D('#a87150'),RK=D('#56311f');
+      for(let y=10;y<=16;y++){ const hw=Math.round(1+(y-10)*2.5), fc=Math.max(1,Math.round(hw*.42));
+        R(xc-hw-1,y,1,1,OL); R(xc+hw+1,y,1,1,OL);
+        for(let x=xc-hw;x<=xc+hw;x++){ const d=x-xc; let col=Math.abs(d)<fc?RC:d<0?RA:RB;
+          if(y>11&&Math.abs(d)===fc)col=RH; else if(y%2===0&&bay(x,y)<.5)col=RK;
+          R(x,y,1,1,col); } }
+      R(xc-1,9,3,1,OL); R(xc,8,1,1,OL); R(xc-1,7,3,1,RK); R(xc,6,1,1,RK);  /* 小寶頂 */
+      R(xc-16,17,33,1,WT[1]); R(xc-17,17,1,1,OL); R(xc+17,17,1,1,OL); }  /* 白色簷口 */
+    /* 右翼（比塔樓高）：照片是四段量體往右一段比一段矮、往後退——每段都是白色階梯山牆＋白色頂層（陽台木棚架與植栽）＋紅磚底座，紅磚頂也一段一段往下降 */
+    const rx=x0+44;
+    for(const [bx,bw,top,yb] of [[rx,13,3,17],[rx+13,11,5,19],[rx+24,10,7,21],[rx+34,10,9,23]]){
+      const gr=bw%2?Math.ceil((bw-3)/4)+1:Math.ceil((bw-2)/4)+1, py=top+gr+1;  /* gr＝山牆階數 */
+      gable(bx,bw,top,yb);
+      if(py+3<=yb){ R(bx,py,bw,1,WO); for(let x=bx+1;x<bx+bw-1;x++)if(hash(x*3+py)>.4)R(x,py+1,1,1+(hash(x+17)>.6?1:0),LF); win(bx+2,py+2,2,2); if(bw>=11)win(bx+bw-4,py+2,2,2); }
+      box(bx,yb,bw,gy-yb,BR,OL); tex(bx+1,yb+1,bw-2,gy-yb-2,BR,BD,.12);
+      const sc=yb+((gy-yb)>>1); R(bx+1,sc,bw-2,1,WH);  /* 白色腰帶 */
+      for(let x=bx+2;x<bx+bw-2;x+=4){ if(sc-yb>=4)win(x,yb+2,2,2); if(gy-sc>=5)win(x,sc+2,2,2); }
+      R(bx-1,top+gr-1,1,gy-top-gr+1,OL); }  /* 段與段之間的分界 */
+    R(rx+5,5,1,2,GL);  /* 最高那面山牆的小氣窗 */
+    R(rx+36,28,8,gy-28,WH); R(rx+36,28,8,1,WD); for(let x=rx+37;x<rx+43;x+=2)R(x,27,1,1,LF); R(rx+38,30,2,gy-30,OP);  /* 右端入口的白色矮牆、階梯與植栽 */
+    /* 前景：椰子樹、灌木、草皮與停車場 */
+    for(const [x,h] of [[x0+40,15],[x0+62,18],[x0+93,12],[x0-9,13]])if(x>1&&x<W-2)palm2(x,h);
+    bush(x0+28,4); bush(x0+53,3); bush(x0+81,4);
+    if(x0-22>4)tree(x0-22,'#2c3a2a'); if(x0+108<W-4)tree(x0+108,'#2c3a2a');
+    ground('#4a5f3a','#4e5254'); for(let x=x0-30;x<x0+120;x+=11)R(x,gy+4,1,3,D('#6e7270')); }
   /* 私校：文化大學（山上、綠琉璃瓦宮殿、中間金色攢尖頂） */
   function bPCCU(){ const cx=Math.max(44,Math.min(W-45,W*0.55|0));
     const GO=D('#d1a03c'),GL=D('#b5862c'),GD=D('#94701f'),GH=D('#e6c46a');
@@ -3652,6 +3715,7 @@ function paintBg(key,tod,alt){
     const p1=pole(6,22), p2=pole(W-6,22); wires([p1,[W*0.3|0,p1[1]+1],p2]); crowsOn([p1,[W*0.3|0,p1[1]+1],p2],3);
     ground('#3e4a36','#4f3328'); R(0,gy+4,W,1,D('#6e5246')); R(0,gy+7,W,1,D('#6e5246')); }
   else if(key==='uni-emp')bNTU();
+  else if(key==='uni-inst')bIAS();
   else if(key==='uni-top'){ if(alt)bNCCU(); else bNTHU(); }
   else if(key==='uni-nat'){ if(alt)bNDHU(); else bNTPU(); }
   else if(key==='uni-priv')bPCCU();
